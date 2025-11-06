@@ -1,25 +1,22 @@
-import { BotWebhook, BotWebhookContext } from '~/webhooks/types'
-import { MessengerService } from '~/services/types'
+import { BotWebhook } from '~/webhooks/types'
+import { MessengerService, ServiceName } from '~/services/types'
 
 export class WebhookDispatcher {
     private webhooks: Map<string, BotWebhook> = new Map()
 
-    register(webhook: BotWebhook) {
-        this.webhooks.set(webhook.name, webhook)
+    register(serviceName: ServiceName, botName: string, webhook: BotWebhook) {
+        const key = `${serviceName}/${botName}`
+        this.webhooks.set(key, webhook)
     }
 
     async dispatch(service: MessengerService, botName: string, update: any) {
-        const data = update?.type
-        if (typeof data !== 'string') return
+        const key = `${service.getName()}/${botName}`
+        const webhook = this.webhooks.get(key)
 
-        const [hookName, actionName] = data.split('/')
-        if (!hookName || !actionName) return
+        if (!webhook) return
 
-        const hook = this.webhooks.get(hookName)
-        const action = hook?.getAction(actionName)
-        if (!action) return
+        const bot = service.getBot(botName)
 
-        const ctx: BotWebhookContext = { service, botName, update }
-        await action(ctx)
+        await bot.handleWebhook(webhook, update)
     }
 }

@@ -1,9 +1,12 @@
+import { BotWebhook, BotWebhookUpdate } from "~/webhooks/types"
+import * as console from "node:console";
+
 export interface BotConfig {
     token: string
 }
 
 export interface BotMessageButton {
-    type: 'callback' | 'request_contact' | 'link'
+    type: 'callback' | 'link' | 'request_contact' | 'location'
     text: string
     payload?: any
 }
@@ -51,12 +54,47 @@ export abstract class Bot {
 
     abstract getUpdate(options?: GetUpdateOptions): Promise<any>
 
+    abstract start(webhook: BotWebhook): void
+
+    abstract convertWebhookUpdate(update: any): BotWebhookUpdate
+
     getInstance() {
         return this.instance
     }
 
     getConfig(): BotConfig {
         return this.config
+    }
+
+    async handleWebhook(webhook: BotWebhook, update: any): Promise<void> {
+        const payload = this.convertWebhookUpdate(update)
+        const handler = webhook.getHandler(payload)
+
+        if (handler) {
+            await handler(this, payload)
+        } else {
+            const unknownHandler = (webhook as any).handleUnknown
+            if (typeof unknownHandler === 'function') {
+                await unknownHandler.call(webhook, this, payload)
+            }
+        }
+    }
+
+    getMediaType(extension: string) {
+        const types = {
+            photo: ['jpeg', 'jpg', 'bmp', 'gif', 'png', 'webp', 'wbmp', 'heic'],
+            video: ['mpg', 'mp4', 'avi', 'mov', 'mkv', 'flv', 'webm'],
+            audio: ['m4a', 'mp3', 'wav', 'wma', 'ogg', 'aac'],
+            document: ['txt', 'doc', 'docx', 'xls', 'xlsx', 'pdf', 'tiff'],
+        }
+        for (const type in types) {
+            // @ts-ignore
+            if (types[type].includes(extension)) {
+                return type
+            }
+        }
+
+        return null
     }
 }
 

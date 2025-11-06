@@ -1,7 +1,6 @@
 import { Bot } from '~/services/types'
 
 export interface BotEventContext {
-    chatId: string | number
     payload: unknown
 }
 
@@ -13,5 +12,5 @@ export abstract class BotEvent {
         this.chatId = chatId
     }
 
-    abstract handle(bot: Bot, ctx: BotEventContext): Promise<void>
+    abstract handle(bot: Bot, payload: unknown): Promise<void>
 }
