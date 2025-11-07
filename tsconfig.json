@@ -15,9 +15,9 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "declaration": true,
-    "declarationMap": true,
+    "declarationMap": false,
     "moduleResolution": "node",
-    "sourceMap": true,
+    "sourceMap": false,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
@@ -36,5 +36,29 @@
   "exclude": [
     "node_modules",
     "dist"
-  ]
+  ],
+  "tsc-alias": {
+    "verbose": false,
+    "resolveFullPaths": true,
+    "replacers": [
+      {
+        "type": "classic",
+        "options": {
+          // Автоматически добавляем расширение .js
+          "addExtension": true,
+          "extensionsToAdd": [".js"],
+
+          // Игнорируем node_modules (принцип изоляции зависимостей)
+          "ignoreNodeModules": true,
+
+          // Сохраняем структуру проекта (принцип четкой архитектурной границы)
+          "preserveSymlinks": false
+        }
+      }
+    ],
+    "fileExtensions": {
+      "inputGlob": "{js,jsx,mjs}",
+      "outputCheck": ["js", "json", "jsx", "mjs"]
+    }
+  }
 }
