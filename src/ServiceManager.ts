@@ -8,8 +8,6 @@ type ServiceRegistry = Map<ServiceName, MessengerService>
 
 export class ServiceManager {
     private services: ServiceRegistry = new Map()
-    private eventDispatcher = new EventDispatcher()
-    private webhookDispatcher = new WebhookDispatcher()
 
     registerService(service: MessengerService) {
         const name = service.getName()
@@ -30,34 +28,9 @@ export class ServiceManager {
         return this.services
     }
 
-    getEventDispatcher() {
-        return this.eventDispatcher
-    }
-
-    getWebhookDispatcher() {
-        return this.webhookDispatcher
-    }
-
-    registerEvent(service: ServiceName | MessengerService, botName: string, event: BotEvent): this {
-        const serviceName = typeof service === 'string' ? service : service.getName()
-
-        if (!this.services.has(serviceName)) {
-            throw new Error(`Service ${serviceName} not found`)
-        }
-
-        this.eventDispatcher.register(serviceName, botName, event)
-
-        return this
-    }
-
-    registerWebhook(service: ServiceName | MessengerService, botName: string, webhook: BotWebhook): this {
-        const serviceName = typeof service === 'string' ? service : service.getName()
-
-        if (!this.services.has(serviceName)) {
-            throw new Error(`Service ${serviceName} not found`)
-        }
-
-        this.webhookDispatcher.register(serviceName, botName, webhook)
+    registerEvent(serviceName: ServiceName, botName: string, event: BotEvent): this {
+        const bot = this.getService(serviceName).getBot(botName)
+        bot.registerEvent(event)
 
         return this
     }
@@ -68,12 +41,12 @@ export class ServiceManager {
         eventName: string,
         payload: unknown,
     ) {
-        const service = this.getService(name)
-        await this.eventDispatcher.emit(service, botName, eventName, payload)
+        const bot = this.getService(name).getBot(botName)
+        await bot.handleEvent(eventName, payload)
     }
 
-    async handleWebhook(name: ServiceName, botName: string, update: any) {
-        const service = this.getService(name)
-        await this.webhookDispatcher.dispatch(service, botName, update)
+    async handleWebhook(name: ServiceName, botName: string, webhook: BotWebhook, update: any) {
+        const bot = this.getService(name).getBot(botName)
+        await bot.handleWebhook(webhook, update)
     }
 }

@@ -1,7 +1,7 @@
 import { Bot } from '~/services/types'
 
 export interface BotWebhookUpdate {
-    type: 'command' | 'callback' | 'text' | 'contact' | 'location' | 'photo' | 'document'
+    type: 'command' | 'callback' | 'text' | 'contact' | 'location'
     message: {
         id: string | number
         sender: {
@@ -36,177 +36,245 @@ export interface BotWebhookContext {
     payload: BotWebhookUpdate
 }
 
-// Декораторы для пометки методов как обработчиков
-export function Command(name: string) {
-    return function (target: any, propertyKey: string) {
-        if (!target.constructor._commands) {
-            target.constructor._commands = new Map()
+
+// Декораторы для композиционного подхода
+export function Command(name: string): MethodDecorator {
+    return function (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
+        const constructor = target.constructor
+        if (!constructor._decoratedCommands) {
+            constructor._decoratedCommands = new Map()
         }
-        target.constructor._commands.set(name.toLowerCase(), propertyKey)
+        constructor._decoratedCommands.set(name.toLowerCase(), propertyKey)
     }
 }
 
-export function Action(pattern: string | RegExp) {
-    return function (target: any, propertyKey: string) {
-        if (!target.constructor._actions) {
-            target.constructor._actions = new Map()
+export function Action(pattern: string | RegExp): MethodDecorator {
+    return function (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
+        const constructor = target.constructor
+        if (!constructor._decoratedActions) {
+            constructor._decoratedActions = new Map()
         }
-        target.constructor._actions.set(pattern, propertyKey)
+        constructor._decoratedActions.set(pattern, propertyKey)
     }
 }
 
-export function Text(pattern: string | RegExp) {
-    return function (target: any, propertyKey: string) {
-        if (!target.constructor._textHandlers) {
-            target.constructor._textHandlers = new Map()
+export function Text(pattern: string | RegExp): MethodDecorator {
+    return function (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
+        const constructor = target.constructor
+        if (!constructor._decoratedTextHandlers) {
+            constructor._decoratedTextHandlers = new Map()
         }
-        target.constructor._textHandlers.set(pattern, propertyKey)
+        constructor._decoratedTextHandlers.set(pattern, propertyKey)
     }
 }
 
-export function Contact() {
-    return function (target: any, propertyKey: string) {
-        if (!target.constructor._contactHandler) {
-            target.constructor._contactHandler = propertyKey
-        }
+export function Contact(): MethodDecorator {
+    return function (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
+        const constructor = target.constructor
+        constructor._decoratedContactHandler = propertyKey
     }
 }
 
-export function Location() {
-    return function (target: any, propertyKey: string) {
-        if (!target.constructor._locationHandler) {
-            target.constructor._locationHandler = propertyKey
-        }
+export function Location(): MethodDecorator {
+    return function (target: any, propertyKey: string | symbol, descriptor: PropertyDescriptor) {
+        const constructor = target.constructor
+        constructor._decoratedLocationHandler = propertyKey
     }
 }
 
-export abstract class BotWebhook {
-    private static _commands: Map<string, string> = new Map()
-    private static _actions: Map<string | RegExp, string> = new Map()
-    private static _textHandlers: Map<string | RegExp, string> = new Map()
-    private static _contactHandler?: string
-    private static _locationHandler?: string
+// Класс регистрации обработчиков
+export class HandlerRegistry {
+    private _commands: Map<string, Function> = new Map()
+    private _actions: Map<string | RegExp, Function> = new Map()
+    private _textHandlers: Map<string | RegExp, Function> = new Map()
+    private _contactHandler?: Function
+    private _locationHandler?: Function
 
-    /**
-     * Получить обработчик для входящего обновления
-     */
-    getHandler(update: BotWebhookUpdate): ((bot: Bot, payload: BotWebhookUpdate) => Promise<void>) | undefined {
-        const constructor = this.constructor as typeof BotWebhook
+    registerCommand(command: string, handler: Function) {
+        this._commands.set(command.toLowerCase(), handler)
+    }
 
+    registerAction(pattern: string | RegExp, handler: Function) {
+        this._actions.set(pattern, handler)
+    }
+
+    registerText(pattern: string | RegExp, handler: Function) {
+        this._textHandlers.set(pattern, handler)
+    }
+
+    registerContact(handler: Function) {
+        this._contactHandler = handler
+    }
+
+    registerLocation(handler: Function) {
+        this._locationHandler = handler
+    }
+
+    getHandler(update: BotWebhookUpdate): Function | undefined {
         switch (update.type) {
             case 'command':
-                return this.getCommandHandler(update, constructor)
+                return this.getCommandHandler(update)
             case 'callback':
-                return this.getActionHandler(update, constructor)
+                return this.getActionHandler(update)
             case 'text':
-                return this.getTextHandler(update, constructor)
+                return this.getTextHandler(update)
             case 'contact':
-                return this.getContactHandler(constructor)
+                return this._contactHandler
             case 'location':
-                return this.getLocationHandler(constructor)
+                return this._locationHandler
             default:
                 return undefined
         }
     }
 
-    /**
-     * Обработчик команд
-     */
-    private getCommandHandler(update: BotWebhookUpdate, constructor: typeof BotWebhook): ((bot: Bot, payload: BotWebhookUpdate) => Promise<void>) | undefined {
+    private getCommandHandler(update: BotWebhookUpdate): Function | undefined {
         if (!update.message.text) return undefined
 
-        // Извлекаем команду из текста (формат: /command или /command@botname)
-        const commandMatch = update.message.text.match(/^\/([a-zA-Z0-9_]+)(@\w+)?\s?(.*)$/)
+        const commandMatch = update.message.text.match(/^\/([a-zA-Z0-9_]+)/)
         if (!commandMatch) return undefined
 
         const commandName = commandMatch[1].toLowerCase()
-        const methodName = constructor._commands?.get(commandName)
-
-        if (methodName && typeof (this as any)[methodName] === 'function') {
-            return (this as any)[methodName].bind(this)
-        }
-
-        return undefined
+        return this._commands.get(commandName)
     }
 
-    /**
-     * Обработчик callback действий
-     */
-    private getActionHandler(update: BotWebhookUpdate, constructor: typeof BotWebhook): ((bot: Bot, payload: BotWebhookUpdate) => Promise<void>) | undefined {
+    private getActionHandler(update: BotWebhookUpdate): Function | undefined {
         if (!update.callback?.data) return undefined
 
         const callbackData = update.callback.data
 
-        for (const [pattern, methodName] of constructor._actions?.entries() || []) {
-            if (typeof pattern === 'string' && pattern === callbackData) {
-                if (typeof (this as any)[methodName] === 'function') {
-                    return (this as any)[methodName].bind(this)
-                }
-            } else if (pattern instanceof RegExp && pattern.test(callbackData)) {
-                if (typeof (this as any)[methodName] === 'function') {
-                    // Добавляем match в payload для доступа к группам регулярного выражения
-                    const match = callbackData.match(pattern)
-                    update.raw = { ...update.raw, match }
-                    return (this as any)[methodName].bind(this)
-                }
+        // Проверяем точное совпадение
+        const exactHandler = this._actions.get(callbackData)
+        if (exactHandler) return exactHandler
+
+        // Проверяем регулярные выражения
+        for (const [pattern, handler] of this._actions.entries()) {
+            if (pattern instanceof RegExp && pattern.test(callbackData)) {
+                // Сохраняем результат match для обработчика
+                update.raw = { ...update.raw, match: callbackData.match(pattern) }
+                return handler
             }
         }
 
         return undefined
     }
 
-    /**
-     * Обработчик текстовых сообщений
-     */
-    private getTextHandler(update: BotWebhookUpdate, constructor: typeof BotWebhook): ((bot: Bot, payload: BotWebhookUpdate) => Promise<void>) | undefined {
+    private getTextHandler(update: BotWebhookUpdate): Function | undefined {
         if (!update.message.text) return undefined
 
         const text = update.message.text
 
-        for (const [pattern, methodName] of constructor._textHandlers?.entries() || []) {
-            if (typeof pattern === 'string' && pattern.toLowerCase() === text.toLowerCase()) {
-                if (typeof (this as any)[methodName] === 'function') {
-                    return (this as any)[methodName].bind(this)
-                }
-            } else if (pattern instanceof RegExp && pattern.test(text)) {
-                if (typeof (this as any)[methodName] === 'function') {
-                    // Добавляем match в payload для доступа к группам регулярного выражения
-                    const match = text.match(pattern)
-                    update.raw = { ...update.raw, match }
-                    return (this as any)[methodName].bind(this)
-                }
+        // Проверяем точное совпадение
+        const exactHandler = this._textHandlers.get(text.toLowerCase())
+        if (exactHandler) return exactHandler
+
+        // Проверяем регулярные выражения
+        for (const [pattern, handler] of this._textHandlers.entries()) {
+            if (pattern instanceof RegExp && pattern.test(text)) {
+                // Сохраняем результат match для обработчика
+                update.raw = { ...update.raw, match: text.match(pattern) }
+                return handler
             }
         }
 
         return undefined
     }
-
-    /**
-     * Обработчик контактов
-     */
-    private getContactHandler(constructor: typeof BotWebhook): ((bot: Bot, payload: BotWebhookUpdate) => Promise<void>) | undefined {
-        if (constructor._contactHandler && typeof (this as any)[constructor._contactHandler] === 'function') {
-            return (this as any)[constructor._contactHandler].bind(this)
-        }
-        return undefined
-    }
-
-    /**
-     * Обработчик локаций
-     */
-    private getLocationHandler(constructor: typeof BotWebhook): ((bot: Bot, payload: BotWebhookUpdate) => Promise<void>) | undefined {
-        if (constructor._locationHandler && typeof (this as any)[constructor._locationHandler] === 'function') {
-            return (this as any)[constructor._locationHandler].bind(this)
-        }
-        return undefined
-    }
 }
 
+// Базовый класс вебхука с композицией и поддержкой декораторов
+export abstract class BotWebhook {
+    protected registry: HandlerRegistry
 
-export class MyBotWebhook extends BotWebhook {
+    constructor() {
+        this.registry = new HandlerRegistry()
+        this.setupFromDecorators()
+        this.registerHandlers()
+    }
 
-    @Command('start')
-    handleStart(bot: Bot, payload: BotWebhookUpdate) {
-        console.log('MyBotWebhook', { bot, payload })
+    /**
+     * Автоматическая регистрация обработчиков из декораторов
+     */
+    private setupFromDecorators() {
+        const constructor = this.constructor as any
+
+        // Регистрируем команды из декораторов
+        if (constructor._decoratedCommands) {
+            for (const [command, methodName] of constructor._decoratedCommands.entries()) {
+                const method = (this as any)[methodName]
+                if (typeof method === 'function') {
+                    this.registry.registerCommand(command, method.bind(this))
+                }
+            }
+        }
+
+        // Регистрируем действия из декораторов
+        if (constructor._decoratedActions) {
+            for (const [pattern, methodName] of constructor._decoratedActions.entries()) {
+                const method = (this as any)[methodName]
+                if (typeof method === 'function') {
+                    this.registry.registerAction(pattern, method.bind(this))
+                }
+            }
+        }
+
+        // Регистрируем текстовые обработчики из декораторов
+        if (constructor._decoratedTextHandlers) {
+            for (const [pattern, methodName] of constructor._decoratedTextHandlers.entries()) {
+                const method = (this as any)[methodName]
+                if (typeof method === 'function') {
+                    this.registry.registerText(pattern, method.bind(this))
+                }
+            }
+        }
+
+        // Регистрируем обработчик контактов из декоратора
+        if (constructor._decoratedContactHandler) {
+            const method = (this as any)[constructor._decoratedContactHandler]
+            if (typeof method === 'function') {
+                this.registry.registerContact(method.bind(this))
+            }
+        }
+
+        // Регистрируем обработчик локаций из декоратора
+        if (constructor._decoratedLocationHandler) {
+            const method = (this as any)[constructor._decoratedLocationHandler]
+            if (typeof method === 'function') {
+                this.registry.registerLocation(method.bind(this))
+            }
+        }
+    }
+
+    /**
+     * Абстрактный метод для ручной регистрации обработчиков (альтернатива декораторам)
+     */
+    protected registerHandlers(): void {}
+
+    /**
+     * Получить обработчик для входящего обновления
+     */
+    getHandler(update: BotWebhookUpdate): Function | undefined {
+        return this.registry.getHandler(update)
+    }
+
+    /**
+     * Вспомогательные методы для ручной регистрации
+     */
+    protected registerCommandHandler(command: string, handler: (bot: Bot, payload: BotWebhookUpdate) => void) {
+        this.registry.registerCommand(command, handler)
+    }
+
+    protected registerActionHandler(pattern: string | RegExp, handler: (bot: Bot, payload: BotWebhookUpdate) => void) {
+        this.registry.registerAction(pattern, handler)
+    }
+
+    protected registerTextHandler(pattern: string | RegExp, handler: (bot: Bot, payload: BotWebhookUpdate) => void) {
+        this.registry.registerText(pattern, handler)
+    }
+
+    protected registerContactHandler(handler: (bot: Bot, payload: BotWebhookUpdate) => void) {
+        this.registry.registerContact(handler)
+    }
+
+    protected registerLocationHandler(handler: (bot: Bot, payload: BotWebhookUpdate) => void) {
+        this.registry.registerLocation(handler)
     }
 }

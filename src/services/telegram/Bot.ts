@@ -68,8 +68,20 @@ export class TelegramBot extends BaseBot {
     }
 
     convertWebhookUpdate(data: any): BotWebhookUpdate {
+        let type: BotWebhookUpdate['type'] = 'text'
+
+        if (data.message?.text && data.message.text.startsWith('/')) {
+            type = 'command'
+        } else if (data.message?.contact) {
+            type = 'contact'
+        } else if (data.message?.location) {
+            type = 'location'
+        } else if (data.message?.callback_query) {
+            type = 'callback'
+        }
+
         return {
-            type: 'command',
+            type,
             message: {
                 id: data.message.message_id,
                 sender: {

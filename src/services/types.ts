@@ -1,5 +1,5 @@
 import { BotWebhook, BotWebhookUpdate } from "~/webhooks/types"
-import * as console from "node:console";
+import { BotEvent } from "~/events/types";
 
 export interface BotConfig {
     token: string
@@ -32,14 +32,19 @@ export interface GetUpdateOptions {
 }
 
 export abstract class Bot {
-    protected instance: any
     public name: string
     public config: BotConfig
+    protected events: Map<string, BotEvent> = new Map()
+    protected instance: any
 
-    constructor(name: string, config: BotConfig) {
+    constructor(name: string, config: BotConfig, events: BotEvent[] = []) {
         this.name = name
         this.config = config
         this.instance = this.createInstance(config.token)
+
+        events.forEach((event: BotEvent) => {
+            this.registerEvent(event)
+        })
     }
 
     protected abstract createInstance(token: string): any
@@ -66,6 +71,18 @@ export abstract class Bot {
         return this.config
     }
 
+    async handleEvent(eventName: string, payload: unknown): Promise<void> {
+        const event = this.events.get(eventName)
+
+        if (!event) {
+            throw new Error(
+                `Event handler for '${eventName}' not registered for bot '${this.name}'`
+            )
+        }
+
+        await event.handle(this, payload)
+    }
+
     async handleWebhook(webhook: BotWebhook, update: any): Promise<void> {
         const payload = this.convertWebhookUpdate(update)
         const handler = webhook.getHandler(payload)
@@ -78,6 +95,12 @@ export abstract class Bot {
                 await unknownHandler.call(webhook, this, payload)
             }
         }
+    }
+
+    registerEvent(event: BotEvent): this {
+        this.events.set(event.name, event)
+
+        return this
     }
 
     getMediaType(extension: string) {

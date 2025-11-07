@@ -1,0 +1,10 @@
+.idea
+.vscode
+.run
+
+.env
+.env.*
+
+node_modules
+dist
+example
