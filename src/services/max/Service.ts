@@ -1,7 +1,7 @@
 import {
     MessengerService,
     BotConfig,
-    Bot,
+    Bot, BotEvent,
 } from '~/types'
 import { MaxBot } from './Bot'
 
@@ -10,7 +10,7 @@ export class Service extends MessengerService {
         return 'max'
     }
 
-    createBot(name: string, config: BotConfig): Bot {
-        return new MaxBot(name, config)
+    createBot(name: string, config: BotConfig, events: BotEvent[] = []): Bot {
+        return new MaxBot(name, config, events)
     }
 }

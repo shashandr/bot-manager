@@ -1,23 +1,19 @@
 import { Bot, BotConfig } from './bot'
+import { BotEvent } from "~/types/event";
 
 export abstract class MessengerService {
     protected bots: Map<string, Bot> = new Map()
 
     abstract getName(): string
 
-    abstract createBot(name: string, config: BotConfig): Bot
+    abstract createBot(name: string, config: BotConfig, events?: BotEvent[]): Bot
 
-    registerBot(name: string, token: string, config?: Partial<BotConfig>): this {
+    registerBot(name: string, token: string, events?: BotEvent[]): this {
         if (this.bots.has(name)) {
             throw new Error(`Bot with name ${name} already registered`)
         }
 
-        const fullConfig: BotConfig = {
-            token,
-            ...config,
-        } as BotConfig
-
-        const bot = this.createBot(name, fullConfig)
+        const bot = this.createBot(name, { token }, events)
         this.bots.set(name, bot)
 
         return this

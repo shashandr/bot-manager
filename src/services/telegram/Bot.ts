@@ -64,13 +64,11 @@ export class TelegramBot extends BaseBot {
         return (bot.telegram as any).callApi('getUpdates', params)
     }
 
-    start(webhook: BotWebhook) {
-        if (webhook) {
-            this.instance.on('message', async (ctx: any) => {
-                await this.handleWebhook(webhook, ctx.update)
-            })
-            this.instance.launch()
-        }
+    onStart() {
+        this.instance.on('message', async (ctx: any) => {
+            await this.handleWebhook(ctx.update)
+        })
+        this.instance.launch()
     }
 
     convertWebhookUpdate(data: any): BotWebhookUpdate {

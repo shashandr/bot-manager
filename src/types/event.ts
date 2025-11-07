@@ -8,7 +8,7 @@ export abstract class BotEvent {
     abstract readonly name: string
     readonly chatId: string | number
 
-    protected constructor(chatId: string | number) {
+    constructor(chatId: string | number) {
         this.chatId = chatId
     }
 

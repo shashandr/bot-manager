@@ -33,6 +33,7 @@ export abstract class Bot {
     public name: string
     public config: BotConfig
     protected events: Map<string, BotEvent> = new Map()
+    protected webhook?: BotWebhook
     protected instance: any
 
     constructor(name: string, config: BotConfig, events: BotEvent[] = []) {
@@ -57,7 +58,7 @@ export abstract class Bot {
 
     abstract getUpdate(options?: GetUpdateOptions): Promise<any>
 
-    abstract start(webhook: BotWebhook): void
+    abstract onStart(): void
 
     abstract convertWebhookUpdate(update: any): BotWebhookUpdate
 
@@ -67,6 +68,16 @@ export abstract class Bot {
 
     getConfig(): BotConfig {
         return this.config
+    }
+
+    getEvents(): string[] {
+        return Array.from(this.events.keys())
+    }
+
+    registerEvent(event: BotEvent): this {
+        this.events.set(event.name, event)
+
+        return this
     }
 
     async handleEvent(eventName: string, payload: unknown): Promise<void> {
@@ -81,24 +92,28 @@ export abstract class Bot {
         await event.handle(this, payload)
     }
 
-    async handleWebhook(webhook: BotWebhook, update: any): Promise<void> {
+    registerWebhook(webhook: BotWebhook): this {
+        this.webhook = webhook
+
+        return this
+    }
+
+    async handleWebhook(update: any): Promise<void> {
+        if (!this.webhook) {
+            return
+        }
+
         const payload = this.convertWebhookUpdate(update)
-        const handler = webhook.getHandler(payload)
+        const handler = this.webhook.getHandler(payload)
 
         if (handler) {
             await handler(this, payload)
         } else {
-            const unknownHandler = (webhook as any).handleUnknown
+            const unknownHandler = (this.webhook as any).handleUnknown
             if (typeof unknownHandler === 'function') {
-                await unknownHandler.call(webhook, this, payload)
+                await unknownHandler.call(this.webhook, this, payload)
             }
         }
-    }
-
-    registerEvent(event: BotEvent): this {
-        this.events.set(event.name, event)
-
-        return this
     }
 
     getMediaType(extension: string) {
@@ -116,5 +131,12 @@ export abstract class Bot {
         }
 
         return null
+    }
+
+    start(webhook: BotWebhook): void {
+        this.registerWebhook(webhook)
+        if (this.webhook) {
+            this.onStart()
+        }
     }
 }

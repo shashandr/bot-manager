@@ -1,4 +1,4 @@
-import { MessengerService, BotEvent, BotWebhook } from '~/types'
+import { MessengerService, BotEvent, Bot } from '~/types'
 
 type ServiceRegistry = Map<string, MessengerService>
 
@@ -32,17 +32,28 @@ export class ServiceManager {
     }
 
     async handleEvent(
-        name: string,
-        botName: string,
+        serviceName: string,
+        botName: string | null,
         eventName: string,
         payload: unknown,
     ) {
-        const bot = this.getService(name).getBot(botName)
+        const service = this.getService(serviceName)
+
+        if (!botName) {
+            botName = service.getBots().find((name: string) => service.getBot(name).getEvents().includes(eventName)) || null
+        }
+
+        if (!botName) {
+            return
+        }
+
+        const bot = service.getBot(botName)
+
         await bot.handleEvent(eventName, payload)
     }
 
-    async handleWebhook(name: string, botName: string, webhook: BotWebhook, update: any) {
-        const bot = this.getService(name).getBot(botName)
-        await bot.handleWebhook(webhook, update)
+    async handleWebhook(serviceName: string, botName: string, update: any) {
+        const bot = this.getService(serviceName).getBot(botName)
+        await bot.handleWebhook(update)
     }
 }
