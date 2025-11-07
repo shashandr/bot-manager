@@ -30,8 +30,8 @@ export interface GetUpdateOptions {
 }
 
 export abstract class Bot {
-    public name: string
-    public config: BotConfig
+    protected name: string
+    protected config: BotConfig
     protected events: Map<string, BotEvent> = new Map()
     protected webhook?: BotWebhook
     protected instance: any
@@ -47,6 +47,10 @@ export abstract class Bot {
     }
 
     protected abstract createInstance(token: string): any
+
+    getName() {
+        return this.name
+    }
 
     abstract sendMessage(
         chatId: number | string,
@@ -75,7 +79,7 @@ export abstract class Bot {
     }
 
     registerEvent(event: BotEvent): this {
-        this.events.set(event.name, event)
+        this.events.set(event.getName(), event)
 
         return this
     }

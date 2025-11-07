@@ -5,11 +5,15 @@ export interface BotEventContext {
 }
 
 export abstract class BotEvent {
-    abstract readonly name: string
-    readonly chatId: string | number
+    protected abstract readonly name: string
+    protected readonly chatId: string | number
 
-    constructor(chatId: string | number) {
+    protected constructor(chatId: string | number) {
         this.chatId = chatId
+    }
+
+    getName() {
+        return this.name
     }
 
     abstract handle(bot: Bot, payload: unknown): Promise<void>
