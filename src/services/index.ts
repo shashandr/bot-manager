@@ -1,5 +1,3 @@
-export * as ServiceTypes from './types'
-
 export { Service as MaxService } from './max/Service'
 export { MaxBot } from './max/Bot'
 

@@ -1,4 +1,4 @@
-import { Bot } from '~/services/types'
+import { Bot } from './bot'
 
 export interface BotEventContext {
     payload: unknown

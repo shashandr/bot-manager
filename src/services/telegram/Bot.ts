@@ -1,7 +1,13 @@
-import { Bot as BaseBot, BotMessageButton, BotMessageOptions, GetUpdateOptions } from "~/services/types"
 import { Context, Markup, Telegraf } from "telegraf"
 import { InputFile } from "telegraf/types"
-import { BotWebhook, BotWebhookUpdate } from "~/webhooks/types"
+import {
+    Bot as BaseBot,
+    BotMessageButton,
+    BotMessageOptions,
+    GetUpdateOptions,
+    BotWebhook,
+    BotWebhookUpdate,
+} from "~/types"
 
 export class TelegramBot extends BaseBot {
     protected createInstance(token: string): Telegraf<Context> {
@@ -38,9 +44,9 @@ export class TelegramBot extends BaseBot {
         const fileType = this.getMediaType(fileName)
 
         if (fileType === 'image') {
-            return bot.telegram.sendPhoto(chatId, file, { caption })
+            return bot.telegram.sendPhoto(chatId, file, {caption})
         } else {
-            return bot.telegram.sendDocument(chatId, file, { caption })
+            return bot.telegram.sendDocument(chatId, file, {caption})
         }
     }
 
@@ -95,7 +101,7 @@ export class TelegramBot extends BaseBot {
                     id: data.message.chat.id,
                     type: data.message.chat.type,
                 },
-                contact: data.message?.contact ? { phone: data.message.contact .phone_number } : undefined,
+                contact: data.message?.contact ? {phone: data.message.contact.phone_number} : undefined,
                 location: data.message?.location ? data.message.location : undefined,
                 text: data.message.text,
                 timestamp: data.message.date,
@@ -139,7 +145,7 @@ export class TelegramBot extends BaseBot {
             Object.assign(result, keyboard)
         }
         if (inlineKeyboardButtons.length) {
-            const inlineKeyboard =  Markup.inlineKeyboard([inlineKeyboardButtons])
+            const inlineKeyboard = Markup.inlineKeyboard([inlineKeyboardButtons])
             Object.assign(result, inlineKeyboard)
         }
 

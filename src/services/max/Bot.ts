@@ -1,7 +1,5 @@
 import { Bot as MaxBotApi } from '@maxhub/max-bot-api'
-import { Bot as BaseBot, BotMessageOptions, GetUpdateOptions } from "~/services/types"
-import { BotWebhookUpdate } from "~/webhooks/types"
-import { getFileType } from "~/lib/strings"
+import { Bot as BaseBot, BotMessageOptions, GetUpdateOptions, BotWebhookUpdate } from "~/types"
 
 export class MaxBot extends BaseBot {
     protected createInstance(token: string): MaxBotApi {
@@ -33,7 +31,11 @@ export class MaxBot extends BaseBot {
 
     async sendFile(chatId: number | string, file: any, caption?: string): Promise<any> {
         const bot = this.instance as MaxBotApi
-        const fileType = getFileType(file)
+        const fileName = typeof file === 'string' ? file : file.filename
+        if (!fileName) {
+            return false
+        }
+        const fileType = this.getMediaType(fileName)
         let attachment
 
         if (fileType === 'image') {

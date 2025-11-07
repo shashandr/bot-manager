@@ -1,8 +1,21 @@
-export { TelegramService, MaxService, ServiceTypes } from './services'
-export { ServiceManager } from './ServiceManager'
+export { TelegramService, MaxService } from '~/services'
 
-export { EventDispatcher } from './events/EventDispatcher'
-export { BotEvent, BotEventContext } from './events/types'
+export { ServiceManager } from '~/ServiceManager'
 
-export { WebhookDispatcher } from './webhooks/WebhookDispatcher'
-export { BotWebhook, BotWebhookContext, BotWebhookUpdate } from './webhooks/types'
+export {
+    MessengerService,
+    Bot,
+    BotConfig,
+    BotMessageOptions,
+    BotMessageButton,
+    BotEvent,
+    BotEventContext,
+    BotWebhook,
+    BotWebhookContext,
+    BotWebhookUpdate,
+    Command,
+    Action,
+    Contact,
+    Location,
+    Text,
+} from '~/types'

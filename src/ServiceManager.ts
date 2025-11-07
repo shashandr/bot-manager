@@ -1,10 +1,6 @@
-import { BotEvent } from './events/types'
-import { BotWebhook } from './webhooks/types'
-import { MessengerService, ServiceName } from './services/types'
-import { EventDispatcher } from './events/EventDispatcher'
-import { WebhookDispatcher } from './webhooks/WebhookDispatcher'
+import { MessengerService, BotEvent, BotWebhook } from '~/types'
 
-type ServiceRegistry = Map<ServiceName, MessengerService>
+type ServiceRegistry = Map<string, MessengerService>
 
 export class ServiceManager {
     private services: ServiceRegistry = new Map()
@@ -17,7 +13,7 @@ export class ServiceManager {
         return this
     }
 
-    getService(name: ServiceName) {
+    getService(name: string) {
         const svc = this.services.get(name)
         if (!svc) throw new Error(`Service '${name}' not found`)
 
@@ -28,7 +24,7 @@ export class ServiceManager {
         return this.services
     }
 
-    registerEvent(serviceName: ServiceName, botName: string, event: BotEvent): this {
+    registerEvent(serviceName: string, botName: string, event: BotEvent): this {
         const bot = this.getService(serviceName).getBot(botName)
         bot.registerEvent(event)
 
@@ -36,7 +32,7 @@ export class ServiceManager {
     }
 
     async handleEvent(
-        name: ServiceName,
+        name: string,
         botName: string,
         eventName: string,
         payload: unknown,
@@ -45,7 +41,7 @@ export class ServiceManager {
         await bot.handleEvent(eventName, payload)
     }
 
-    async handleWebhook(name: ServiceName, botName: string, webhook: BotWebhook, update: any) {
+    async handleWebhook(name: string, botName: string, webhook: BotWebhook, update: any) {
         const bot = this.getService(name).getBot(botName)
         await bot.handleWebhook(webhook, update)
     }

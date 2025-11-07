@@ -1,4 +1,4 @@
-import { Bot } from '~/services/types'
+import { Bot } from './bot'
 
 export interface BotWebhookUpdate {
     type: 'command' | 'callback' | 'text' | 'contact' | 'location'
@@ -35,7 +35,6 @@ export interface BotWebhookUpdate {
 export interface BotWebhookContext {
     payload: BotWebhookUpdate
 }
-
 
 // Декораторы для композиционного подхода
 export function Command(name: string): MethodDecorator {

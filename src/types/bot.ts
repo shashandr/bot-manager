@@ -1,5 +1,5 @@
-import { BotWebhook, BotWebhookUpdate } from "~/webhooks/types"
-import { BotEvent } from "~/events/types";
+import { BotWebhook, BotWebhookUpdate } from './webhook'
+import { BotEvent } from './event'
 
 export interface BotConfig {
     token: string
@@ -21,8 +21,6 @@ export interface BotUpdateHandler {
     onCallbackQuery?: (ctx: any) => void | Promise<void>
     onAnyMessage?: (ctx: any) => void | Promise<void>
 }
-
-export type ServiceName = 'tg' | 'max'
 
 export interface GetUpdateOptions {
     offset?: number
@@ -118,42 +116,5 @@ export abstract class Bot {
         }
 
         return null
-    }
-}
-
-export abstract class MessengerService {
-    protected bots: Map<string, Bot> = new Map()
-
-    abstract getName(): ServiceName
-
-    abstract createBot(name: string, config: BotConfig): Bot
-
-    registerBot(name: string, token: string, config?: Partial<BotConfig>): this {
-        if (this.bots.has(name)) {
-            throw new Error(`Bot with name ${name} already registered`)
-        }
-
-        const fullConfig: BotConfig = {
-            token,
-            ...config,
-        } as BotConfig
-
-        const bot = this.createBot(name, fullConfig)
-        this.bots.set(name, bot)
-
-        return this
-    }
-
-    getBots(): string[] {
-        return Array.from(this.bots.keys())
-    }
-
-    getBot(name: string): Bot {
-        const bot = this.bots.get(name)
-        if (!bot) {
-            throw new Error(`Bot ${name} not found`)
-        }
-
-        return bot
     }
 }

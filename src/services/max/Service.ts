@@ -1,13 +1,12 @@
 import {
     MessengerService,
-    ServiceName,
     BotConfig,
     Bot,
-} from '../types'
+} from '~/types'
 import { MaxBot } from './Bot'
 
 export class Service extends MessengerService {
-    getName(): ServiceName {
+    getName(): string {
         return 'max'
     }
 
