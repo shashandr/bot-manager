@@ -69,23 +69,26 @@ export class TelegramBot extends BaseBot {
             await this.handleWebhook(ctx.update)
         })
         this.instance.on('callback_query', async (ctx: any) => {
-            await this.handleWebhook(ctx.callbackQuery.data)
-            console.log('Нажата callback кнопка:', ctx.callbackQuery.data)
+            await this.handleWebhook(ctx.callbackQuery)
         })
         this.instance.launch()
     }
 
     convertWebhookUpdate(data: any): BotWebhookUpdate {
         let type: BotWebhookUpdate['type'] = 'text'
+        let callbackData: undefined
 
-        if (data.message?.text && data.message.text.startsWith('/')) {
+        if (data?.data) {
+            callbackData = JSON.parse(data.data)
+            if (callbackData) {
+                type = 'callback'
+            }
+        } else if (data.message?.text && data.message.text.startsWith('/')) {
             type = 'command'
         } else if (data.message?.contact) {
             type = 'contact'
         } else if (data.message?.location) {
             type = 'location'
-        } else if (data.message?.callback_query) {
-            type = 'callback'
         }
 
         return {
@@ -108,6 +111,7 @@ export class TelegramBot extends BaseBot {
                 text: data.message.text,
                 timestamp: data.message.date,
             },
+            callback: { data: callbackData },
             raw: data,
         }
     }

@@ -26,8 +26,7 @@ export interface BotWebhookUpdate {
         timestamp: number
     }
     callback?: {
-        data: string
-        messageId: string | number
+        data: any
     }
     raw: any
 }
@@ -111,16 +110,16 @@ export class HandlerRegistry {
 
     getHandler(update: BotWebhookUpdate): Function | undefined {
         switch (update.type) {
-            case 'command':
-                return this.getCommandHandler(update)
             case 'callback':
                 return this.getActionHandler(update)
-            case 'text':
-                return this.getTextHandler(update)
+            case 'command':
+                return this.getCommandHandler(update)
             case 'contact':
                 return this._contactHandler
             case 'location':
                 return this._locationHandler
+            case 'text':
+                return this.getTextHandler(update)
             default:
                 return undefined
         }
@@ -139,17 +138,17 @@ export class HandlerRegistry {
     private getActionHandler(update: BotWebhookUpdate): Function | undefined {
         if (!update.callback?.data) return undefined
 
-        const callbackData = update.callback.data
+        const actionName = update.callback.data?.action
 
         // Проверяем точное совпадение
-        const exactHandler = this._actions.get(callbackData)
+        const exactHandler = this._actions.get(actionName)
         if (exactHandler) return exactHandler
 
         // Проверяем регулярные выражения
         for (const [pattern, handler] of this._actions.entries()) {
-            if (pattern instanceof RegExp && pattern.test(callbackData)) {
+            if (pattern instanceof RegExp && pattern.test(actionName)) {
                 // Сохраняем результат match для обработчика
-                update.raw = { ...update.raw, match: callbackData.match(pattern) }
+                update.raw = { ...update.raw, match: actionName.match(pattern) }
                 return handler
             }
         }
