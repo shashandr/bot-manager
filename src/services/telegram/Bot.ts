@@ -22,7 +22,7 @@ export class TelegramBot extends BaseBot {
         const bot = this.instance as Telegraf<Context>
         const extra: Record<string, unknown> = {}
 
-        if (options?.parseMode) extra.parse_mode = options.parseMode
+        extra.parse_mode = options?.parseMode || 'html'
         if (options?.buttons && options.buttons.length > 0) {
             const keyboards = this.prepareKeyboard(options.buttons)
             keyboards && Object.assign(extra, keyboards)
@@ -67,6 +67,10 @@ export class TelegramBot extends BaseBot {
     onStart() {
         this.instance.on('message', async (ctx: any) => {
             await this.handleWebhook(ctx.update)
+        })
+        this.instance.on('callback_query', async (ctx: any) => {
+            await this.handleWebhook(ctx.callbackQuery.data)
+            console.log('Нажата callback кнопка:', ctx.callbackQuery.data)
         })
         this.instance.launch()
     }
