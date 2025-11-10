@@ -16,6 +16,7 @@ export interface BotMessageButton {
 export interface BotMessageOptions {
     parseMode?: 'html' | 'markdown'
     buttons?: Array<BotMessageButton>
+    disableNotification?: boolean
 }
 
 export interface BotUpdateHandler {

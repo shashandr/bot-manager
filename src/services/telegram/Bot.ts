@@ -18,6 +18,8 @@ export class TelegramBot extends BaseBot {
         const extra: Record<string, unknown> = {}
 
         extra.parse_mode = options?.parseMode || 'html'
+        extra.disable_notification = options?.disableNotification || false
+
         if (options?.buttons && options.buttons.length > 0) {
             const keyboards = this.prepareKeyboard(options.buttons)
             keyboards && Object.assign(extra, keyboards)
@@ -41,6 +43,12 @@ export class TelegramBot extends BaseBot {
 
         extra.parse_mode = options?.parseMode || 'html'
         extra.caption = this.prepareMessageText(caption || '', extra.parse_mode as string)
+        extra.disable_notification = options?.disableNotification || false
+
+        if (options?.buttons && options.buttons.length > 0) {
+            const keyboards = this.prepareKeyboard(options.buttons)
+            keyboards && Object.assign(extra, keyboards)
+        }
 
         if (fileType && ['image', 'photo'].includes(fileType)) {
             await bot.telegram.sendPhoto(chatId, file, extra)
@@ -56,6 +64,7 @@ export class TelegramBot extends BaseBot {
 
         const extra: Record<string, unknown> = {}
         extra.parse_mode = options?.parseMode || 'html'
+        extra.disable_notification = options?.disableNotification || true
 
         await bot.telegram.editMessageText(chatId, messageId, undefined, this.prepareMessageText(text || '', extra.parse_mode as string), extra)
 
@@ -67,6 +76,7 @@ export class TelegramBot extends BaseBot {
 
         const extra: Record<string, unknown> = {}
         extra.parse_mode = options?.parseMode || 'html'
+        extra.disable_notification = options?.disableNotification || true
 
         await bot.telegram.editMessageCaption(chatId, messageId, undefined, this.prepareMessageText(caption || '', extra.parse_mode as string), extra)
 
