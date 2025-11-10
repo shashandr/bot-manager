@@ -14,10 +14,23 @@
         "format": "prettier --check \"src/**/*.ts\"",
         "format:fix": "prettier --write \"src/**/*.ts\""
     },
+    "exports": {
+        ".": {
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js",
+            "default": "./lib/esm/index.js"
+        },
+        "./types": {
+            "import": "./lib/esm/types/index.js",
+            "require": "./lib/cjs/types/index.js",
+            "default": "./lib/esm/types/index.js"
+        }
+    },
+    "types": "./lib/esm/index.d.ts",
     "keywords": [
+        "bot",
         "telegram",
-        "max",
-        "bot"
+        "max"
     ],
     "author": "Shashenko Andrey",
     "license": "ISC",

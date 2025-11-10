@@ -35,7 +35,7 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "lib"
   ],
   "tsc-alias": {
     "verbose": false,

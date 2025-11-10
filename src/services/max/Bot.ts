@@ -1,6 +1,5 @@
 import { Bot as MaxBotApi } from '@maxhub/max-bot-api'
 import { Bot as BaseBot, BotMessageOptions, GetUpdateOptions, BotWebhookUpdate } from "~/types"
-import { text } from "telegraf/typings/button";
 
 export class MaxBot extends BaseBot {
     protected createInstance(token: string): MaxBotApi {
