@@ -28,7 +28,7 @@ export interface BotWebhookUpdate {
     }
     command?: {
         name: string
-        value: string
+        value?: string
     }
     callback?: {
         data: any

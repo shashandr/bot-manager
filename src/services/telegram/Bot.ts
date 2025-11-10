@@ -120,8 +120,8 @@ export class TelegramBot extends BaseBot {
         } else if (data.message?.text && data.message.text.startsWith('/')) {
             type = 'command'
 
-            const commandParts = data.message.text.includes('=')
-                ? data.message.text.split('=')
+            const commandParts = data.message.text.includes(' ')
+                ? data.message.text.split(' ')
                 : [data.message.text, null]
 
             if (commandParts[0] === 'start' && commandParts[1] && commandParts[1].includes('=')) {
