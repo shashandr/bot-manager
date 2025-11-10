@@ -1,6 +1,7 @@
 import { BotWebhook, BotWebhookUpdate } from './webhook'
 import { BotEvent } from './event'
 import { pregMatchAll, stripTags } from '~/lib/strings'
+import { getFileType } from '~/lib/files'
 
 export interface BotConfig {
     token: string
@@ -158,21 +159,8 @@ export abstract class Bot {
         }
     }
 
-    getMediaType(extension: string) {
-        const types = {
-            photo: ['jpeg', 'jpg', 'bmp', 'gif', 'png', 'webp', 'wbmp', 'heic'],
-            video: ['mpg', 'mp4', 'avi', 'mov', 'mkv', 'flv', 'webm'],
-            audio: ['m4a', 'mp3', 'wav', 'wma', 'ogg', 'aac'],
-            document: ['txt', 'doc', 'docx', 'xls', 'xlsx', 'pdf', 'tiff'],
-        }
-        for (const type in types) {
-            // @ts-ignore
-            if (types[type].includes(extension)) {
-                return type
-            }
-        }
-
-        return null
+    getMediaType(fileName: string): string | null {
+        return getFileType(fileName)
     }
 
     start(webhook: BotWebhook): void {
