@@ -40,11 +40,12 @@ export class TelegramBot extends BaseBot {
         const fileType = this.getMediaType(fileName)
 
         extra.parse_mode = options?.parseMode || 'html'
+        extra.caption = this.prepareMessageText(caption || '', extra.parse_mode as string)
 
         if (fileType && ['image', 'photo'].includes(fileType)) {
-            await bot.telegram.sendPhoto(chatId, file, { caption: this.prepareMessageText(caption || '', extra.parse_mode as string) })
+            await bot.telegram.sendPhoto(chatId, file, extra)
         } else {
-            await bot.telegram.sendDocument(chatId, file, { caption: this.prepareMessageText(caption || '', extra.parse_mode as string) })
+            await bot.telegram.sendDocument(chatId, file, extra)
         }
 
         return true
@@ -56,7 +57,7 @@ export class TelegramBot extends BaseBot {
         const extra: Record<string, unknown> = {}
         extra.parse_mode = options?.parseMode || 'html'
 
-        await bot.telegram.editMessageText(chatId, messageId, undefined, this.prepareMessageText(text || '', extra.parse_mode as string))
+        await bot.telegram.editMessageText(chatId, messageId, undefined, this.prepareMessageText(text || '', extra.parse_mode as string), extra)
 
         return true
     }
@@ -67,7 +68,7 @@ export class TelegramBot extends BaseBot {
         const extra: Record<string, unknown> = {}
         extra.parse_mode = options?.parseMode || 'html'
 
-        await bot.telegram.editMessageCaption(chatId, messageId, undefined, this.prepareMessageText(caption || '', extra.parse_mode as string))
+        await bot.telegram.editMessageCaption(chatId, messageId, undefined, this.prepareMessageText(caption || '', extra.parse_mode as string), extra)
 
         return true
     }
