@@ -141,7 +141,7 @@ export class TelegramBot extends BaseBot {
                 },
                 contact: data.message?.contact ? { phone: data.message.contact.phone_number } : undefined,
                 location: data.message?.location ? data.message.location : undefined,
-                text: data.message.text,
+                text: data.message.text || data.message.caption,
                 timestamp: data.message.date,
             },
             callback: callbackData ? { data: callbackData } : undefined,
