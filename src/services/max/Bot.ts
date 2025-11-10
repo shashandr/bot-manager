@@ -36,7 +36,7 @@ export class MaxBot extends BaseBot {
         const fileType = this.getMediaType(fileName)
         let attachment
 
-        if (fileType === 'image') {
+        if (fileType && ['image', 'photo'].includes(fileType)) {
             attachment = await bot.api.uploadImage({ file } as any)
         } else {
             attachment = await bot.api.uploadFile({ file } as any)

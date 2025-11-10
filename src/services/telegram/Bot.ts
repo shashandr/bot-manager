@@ -41,7 +41,7 @@ export class TelegramBot extends BaseBot {
 
         extra.parse_mode = options?.parseMode || 'html'
 
-        if (fileType === 'image') {
+        if (fileType && ['image', 'photo'].includes(fileType)) {
             await bot.telegram.sendPhoto(chatId, file, { caption: this.prepareMessageText(caption || '', extra.parse_mode as string) })
         } else {
             await bot.telegram.sendDocument(chatId, file, { caption: this.prepareMessageText(caption || '', extra.parse_mode as string) })
