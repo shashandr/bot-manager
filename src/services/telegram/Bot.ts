@@ -133,7 +133,7 @@ export class TelegramBot extends BaseBot {
                 text: data.message.text,
                 timestamp: data.message.date,
             },
-            callback: { data: callbackData },
+            callback: callbackData ? { data: callbackData } : undefined,
             raw: data,
         }
     }
