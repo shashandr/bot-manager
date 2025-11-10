@@ -6,6 +6,6 @@
 .env.*
 
 node_modules
-dist
-example
-lib
+/dist
+/lib
+/example
