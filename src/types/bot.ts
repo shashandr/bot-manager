@@ -73,9 +73,9 @@ export abstract class Bot {
 
     abstract getUpdate(options?: GetUpdateOptions): Promise<any>
 
-    abstract onStart(): void
+    protected abstract onStart(): void
 
-    abstract convertWebhookUpdate(update: any): BotWebhookUpdate
+    protected abstract convertWebhookUpdate(update: any): BotWebhookUpdate
 
     async addMessageTag(chatId: number | string, messageId: number, text: string, tag: string, options?: BotMessageOptions): Promise<boolean> {
         text = this.appendTag(text, tag)

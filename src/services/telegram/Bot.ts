@@ -97,7 +97,7 @@ export class TelegramBot extends BaseBot {
         return (bot.telegram as any).callApi('getUpdates', params)
     }
 
-    onStart() {
+    protected onStart() {
         this.instance.on('message', async (ctx: any) => {
             await this.handleWebhook(ctx.update)
         })
@@ -107,7 +107,7 @@ export class TelegramBot extends BaseBot {
         this.instance.launch()
     }
 
-    convertWebhookUpdate(data: any): BotWebhookUpdate {
+    protected convertWebhookUpdate(data: any): BotWebhookUpdate {
         let type: BotWebhookUpdate['type'] = 'text'
         let callbackData: undefined
 
@@ -139,7 +139,12 @@ export class TelegramBot extends BaseBot {
                     id: data.message.chat.id,
                     type: data.message.chat.type,
                 },
-                contact: data.message?.contact ? { phone: data.message.contact.phone_number } : undefined,
+                contact: data.message?.contact
+                    ? {
+                        phone: data.message.contact.phone_number,
+                        sender: data.message.contact.user_id === data.message.from.id,
+                    }
+                    : undefined,
                 location: data.message?.location ? data.message.location : undefined,
                 text: data.message.text || data.message.caption,
                 timestamp: data.message.date,

@@ -3,7 +3,7 @@ import { Bot } from './bot'
 export interface BotWebhookUpdate {
     type: 'command' | 'callback' | 'text' | 'contact' | 'location'
     message: {
-        id: string | number
+        id: number
         sender: {
             id: string | number
             firstName?: string
@@ -18,6 +18,7 @@ export interface BotWebhookUpdate {
         text?: string
         contact?: {
             phone: string
+            sender: boolean
         }
         location?: {
             latitude: number

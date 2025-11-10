@@ -79,11 +79,11 @@ export class MaxBot extends BaseBot {
         )
     }
 
-    onStart() {
+    protected onStart() {
 
     }
 
-    convertWebhookUpdate(data: any): BotWebhookUpdate {
+    protected convertWebhookUpdate(data: any): BotWebhookUpdate {
         let type: BotWebhookUpdate['type'] = 'text'
         let callbackData: undefined
 
