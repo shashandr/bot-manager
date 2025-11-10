@@ -1,5 +1,6 @@
 import { BotWebhook, BotWebhookUpdate } from './webhook'
 import { BotEvent } from './event'
+import { pregMatchAll, stripTags } from '~/lib/strings'
 
 export interface BotConfig {
     token: string
@@ -52,13 +53,21 @@ export abstract class Bot {
         return this.name
     }
 
-    abstract sendMessage(
-        chatId: number | string,
-        text: string,
-        options?: BotMessageOptions
-    ): Promise<any>
+    getInstance() {
+        return this.instance
+    }
 
-    abstract sendFile(chatId: number | string, file: any, caption?: string): Promise<any>
+    getConfig(): BotConfig {
+        return this.config
+    }
+
+    abstract sendMessage(chatId: number | string, text: string, options?: BotMessageOptions): Promise<boolean>
+
+    abstract sendFile(chatId: number | string, file: any, caption?: string, options?: BotMessageOptions): Promise<boolean>
+
+    abstract editMessage(chatId: number | string, messageId: number, text: string, options?: BotMessageOptions): Promise<boolean>
+
+    abstract editCaption(chatId: number | string, messageId: number, caption: string, options?: BotMessageOptions): Promise<boolean>
 
     abstract getUpdate(options?: GetUpdateOptions): Promise<any>
 
@@ -66,12 +75,41 @@ export abstract class Bot {
 
     abstract convertWebhookUpdate(update: any): BotWebhookUpdate
 
-    getInstance() {
-        return this.instance
+    async addMessageTag(chatId: number | string, messageId: number, text: string, tag: string, options?: BotMessageOptions): Promise<boolean> {
+        text = this.appendTag(text, tag)
+
+        return await this.editMessage(chatId, messageId, text, options)
     }
 
-    getConfig(): BotConfig {
-        return this.config
+    async addFileTag(chatId: number | string, messageId: number, caption: string, tag: string, options?: BotMessageOptions): Promise<boolean> {
+        caption = this.appendTag(caption, tag)
+
+        return await this.editCaption(chatId, messageId, caption, options)
+    }
+
+    protected prepareMessageText(text: string, parseMode: string): string {
+        if (parseMode === 'html') {
+            return stripTags(text, ['p', 'br', 'a', 'b', 'i', 'u', 's', 'strong', 'strike', 'em', 'del', 'code', 'pre'])
+                .replace(/<(p|br)\s?\/?>/gi, '\n')
+                .replace(/<\/p>/gi, '')
+        }
+
+        return text
+    }
+
+    protected appendTag(text: string, tag: string): string {
+        const matches = pregMatchAll(/#(.+?)[<br\s]/, text)
+        if (matches.length) {
+            const existTags = matches[1]
+            if (!existTags?.length) {
+                text = `#${tag}<br/><br/>${text}`
+            } else if (!existTags.includes(tag)) {
+                const lastTag = existTags[existTags.length - 1];
+                text = text.replace(`#${lastTag}`, `#${lastTag} #${tag}`)
+            }
+        }
+
+        return text
     }
 
     getEvents(): string[] {

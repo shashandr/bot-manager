@@ -5,7 +5,6 @@ import {
     BotMessageButton,
     BotMessageOptions,
     GetUpdateOptions,
-    BotWebhook,
     BotWebhookUpdate,
 } from "~/types"
 
@@ -14,11 +13,7 @@ export class TelegramBot extends BaseBot {
         return new Telegraf(token)
     }
 
-    async sendMessage(
-        chatId: number | string,
-        text: string,
-        options?: BotMessageOptions
-    ): Promise<any> {
+    async sendMessage(chatId: number | string, text: string, options?: BotMessageOptions): Promise<boolean> {
         const bot = this.instance as Telegraf<Context>
         const extra: Record<string, unknown> = {}
 
@@ -28,26 +23,53 @@ export class TelegramBot extends BaseBot {
             keyboards && Object.assign(extra, keyboards)
         }
 
-        return bot.telegram.sendMessage(chatId, text, extra)
+        await bot.telegram.sendMessage(chatId, this.prepareMessageText(text, extra.parse_mode as string), extra)
+
+        return true
     }
 
-    async sendFile(
-        chatId: number | string,
-        file: InputFile | string,
-        caption?: string
-    ): Promise<any> {
+    async sendFile(chatId: number | string, file: InputFile | string, caption?: string, options?: BotMessageOptions): Promise<boolean> {
+        const extra: Record<string, unknown> = {}
         const bot = this.instance as Telegraf<Context>
         const fileName = typeof file === 'string' ? file : file.filename
+
         if (!fileName) {
             return false
         }
+
         const fileType = this.getMediaType(fileName)
 
+        extra.parse_mode = options?.parseMode || 'html'
+
         if (fileType === 'image') {
-            return bot.telegram.sendPhoto(chatId, file, {caption})
+            await bot.telegram.sendPhoto(chatId, file, { caption: this.prepareMessageText(caption || '', extra.parse_mode as string) })
         } else {
-            return bot.telegram.sendDocument(chatId, file, {caption})
+            await bot.telegram.sendDocument(chatId, file, { caption: this.prepareMessageText(caption || '', extra.parse_mode as string) })
         }
+
+        return true
+    }
+
+    async editMessage(chatId: number | string, messageId: number, text: string, options?: BotMessageOptions): Promise<boolean> {
+        const bot = this.instance as Telegraf<Context>
+
+        const extra: Record<string, unknown> = {}
+        extra.parse_mode = options?.parseMode || 'html'
+
+        await bot.telegram.editMessageText(chatId, messageId, undefined, this.prepareMessageText(text || '', extra.parse_mode as string))
+
+        return true
+    }
+
+    async editCaption(chatId: number | string, messageId: number, caption: string, options?: BotMessageOptions): Promise<boolean> {
+        const bot = this.instance as Telegraf<Context>
+
+        const extra: Record<string, unknown> = {}
+        extra.parse_mode = options?.parseMode || 'html'
+
+        await bot.telegram.editMessageCaption(chatId, messageId, undefined, this.prepareMessageText(caption || '', extra.parse_mode as string))
+
+        return true
     }
 
     async getUpdate(options?: GetUpdateOptions): Promise<any> {
@@ -106,7 +128,7 @@ export class TelegramBot extends BaseBot {
                     id: data.message.chat.id,
                     type: data.message.chat.type,
                 },
-                contact: data.message?.contact ? {phone: data.message.contact.phone_number} : undefined,
+                contact: data.message?.contact ? { phone: data.message.contact.phone_number } : undefined,
                 location: data.message?.location ? data.message.location : undefined,
                 text: data.message.text,
                 timestamp: data.message.date,
