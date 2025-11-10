@@ -2,20 +2,20 @@ import { Bot } from './bot'
 
 export interface BotWebhookUpdate {
     type: 'command' | 'callback' | 'text' | 'contact' | 'location'
+    sender: {
+        id: string | number
+        firstName?: string
+        lastName?: string
+        username?: string
+        isBot?: boolean
+    }
+    chat: {
+        id: string | number
+        type?: 'private' | 'group' | 'supergroup' | 'channel'
+    }
     message: {
         id: number
         timestamp: number
-        sender: {
-            id: string | number
-            firstName?: string
-            lastName?: string
-            username?: string
-            isBot?: boolean
-        }
-        chat: {
-            id: string | number
-            type?: 'private' | 'group' | 'supergroup' | 'channel'
-        }
         text?: string
     }
     contact?: {
