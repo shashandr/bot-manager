@@ -1,0 +1,79 @@
+import { Bot } from './bot';
+export interface BotWebhookUpdate {
+    type: 'command' | 'callback' | 'text' | 'contact' | 'location';
+    message: {
+        id: string | number;
+        sender: {
+            id: string | number;
+            firstName?: string;
+            lastName?: string;
+            username?: string;
+            isBot?: boolean;
+        };
+        chat: {
+            id: string | number;
+            type?: 'private' | 'group' | 'supergroup' | 'channel';
+        };
+        text?: string;
+        contact?: {
+            phone: string;
+        };
+        location?: {
+            latitude: number;
+            longitude: number;
+        };
+        timestamp: number;
+    };
+    callback?: {
+        data: any;
+    };
+    raw: any;
+}
+export interface BotWebhookContext {
+    payload: BotWebhookUpdate;
+}
+export declare function Command(name: string): MethodDecorator;
+export declare function Action(pattern: string | RegExp): MethodDecorator;
+export declare function Text(pattern: string | RegExp): MethodDecorator;
+export declare function Contact(): MethodDecorator;
+export declare function Location(): MethodDecorator;
+export declare class HandlerRegistry {
+    private _commands;
+    private _actions;
+    private _textHandlers;
+    private _contactHandler?;
+    private _locationHandler?;
+    registerCommand(command: string, handler: Function): void;
+    registerAction(pattern: string | RegExp, handler: Function): void;
+    registerText(pattern: string | RegExp, handler: Function): void;
+    registerContact(handler: Function): void;
+    registerLocation(handler: Function): void;
+    getHandler(update: BotWebhookUpdate): Function | undefined;
+    private getCommandHandler;
+    private getActionHandler;
+    private getTextHandler;
+}
+export declare abstract class BotWebhook {
+    protected registry: HandlerRegistry;
+    constructor();
+    /**
+     * Автоматическая регистрация обработчиков из декораторов
+     */
+    private setupFromDecorators;
+    /**
+     * Абстрактный метод для ручной регистрации обработчиков (альтернатива декораторам)
+     */
+    protected registerHandlers(): void;
+    /**
+     * Получить обработчик для входящего обновления
+     */
+    getHandler(update: BotWebhookUpdate): Function | undefined;
+    /**
+     * Вспомогательные методы для ручной регистрации
+     */
+    protected registerCommandHandler(command: string, handler: (bot: Bot, payload: BotWebhookUpdate) => void): void;
+    protected registerActionHandler(pattern: string | RegExp, handler: (bot: Bot, payload: BotWebhookUpdate) => void): void;
+    protected registerTextHandler(pattern: string | RegExp, handler: (bot: Bot, payload: BotWebhookUpdate) => void): void;
+    protected registerContactHandler(handler: (bot: Bot, payload: BotWebhookUpdate) => void): void;
+    protected registerLocationHandler(handler: (bot: Bot, payload: BotWebhookUpdate) => void): void;
+}

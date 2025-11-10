@@ -1,0 +1,12 @@
+import { Bot as MaxBotApi } from '@maxhub/max-bot-api';
+import { Bot as BaseBot, BotMessageOptions, GetUpdateOptions, BotWebhookUpdate } from "~/types";
+export declare class MaxBot extends BaseBot {
+    protected createInstance(token: string): MaxBotApi;
+    sendMessage(chatId: number | string, text: string, options?: BotMessageOptions): Promise<boolean>;
+    sendFile(chatId: number | string, file: any, caption?: string): Promise<boolean>;
+    editCaption(chatId: number | string, messageId: number, caption: string, options?: BotMessageOptions): Promise<boolean>;
+    editMessage(chatId: number | string, messageId: number, text: string, options?: BotMessageOptions): Promise<boolean>;
+    getUpdate(options?: GetUpdateOptions): Promise<any>;
+    onStart(): void;
+    convertWebhookUpdate(data: any): BotWebhookUpdate;
+}
