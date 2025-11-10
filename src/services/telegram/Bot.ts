@@ -134,20 +134,20 @@ export class TelegramBot extends BaseBot {
 
         return {
             type,
+            sender: {
+                id: data.message.from.id,
+                firstName: data.message.from.first_name,
+                lastName: data.message.from.last_name,
+                username: data.message.from.username,
+                isBot: data.message.from.is_bot,
+            },
+            chat: {
+                id: data.message.chat.id,
+                type: data.message.chat.type,
+            },
             message: {
                 id: data.message.message_id,
                 timestamp: data.message.date,
-                sender: {
-                    id: data.message.from.id,
-                    firstName: data.message.from.first_name,
-                    lastName: data.message.from.last_name,
-                    username: data.message.from.username,
-                    isBot: data.message.from.is_bot,
-                },
-                chat: {
-                    id: data.message.chat.id,
-                    type: data.message.chat.type,
-                },
                 text: data.message.text || data.message.caption,
             },
             contact: data.message?.contact

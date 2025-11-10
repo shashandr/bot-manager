@@ -110,18 +110,18 @@ export class MaxBot extends BaseBot {
 
         return {
             type,
+            sender: {
+                id: data.message.sender.user_id,
+                firstName: data.message.sender.first_name,
+                lastName: data.message.sender.last_name,
+                username: data.message.sender.username,
+                isBot: data.message.sender.is_bot,
+            },
+            chat: {
+                id: data.message.chat.id,
+            },
             message: {
                 id: data.message.message_id,
-                sender: {
-                    id: data.message.sender.user_id,
-                    firstName: data.message.sender.first_name,
-                    lastName: data.message.sender.last_name,
-                    username: data.message.sender.username,
-                    isBot: data.message.sender.is_bot,
-                },
-                chat: {
-                    id: data.message.chat.id,
-                },
                 text: data.message.text,
                 timestamp: data.message.date,
             },
