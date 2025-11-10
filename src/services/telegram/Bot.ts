@@ -109,7 +109,8 @@ export class TelegramBot extends BaseBot {
 
     protected convertWebhookUpdate(data: any): BotWebhookUpdate {
         let type: BotWebhookUpdate['type'] = 'text'
-        let callbackData: undefined
+        let commandData: any = undefined
+        let callbackData: any = undefined
 
         if (data?.data) {
             callbackData = JSON.parse(data.data)
@@ -118,6 +119,13 @@ export class TelegramBot extends BaseBot {
             }
         } else if (data.message?.text && data.message.text.startsWith('/')) {
             type = 'command'
+            const commandParts = data.message.text.includes('=')
+                ? data.message.text.split('=')
+                : [data.message.text, null]
+            commandData = {
+                name: commandParts[0],
+                value: commandParts[1],
+            }
         } else if (data.message?.contact) {
             type = 'contact'
         } else if (data.message?.location) {
@@ -128,6 +136,7 @@ export class TelegramBot extends BaseBot {
             type,
             message: {
                 id: data.message.message_id,
+                timestamp: data.message.date,
                 sender: {
                     id: data.message.from.id,
                     firstName: data.message.from.first_name,
@@ -139,18 +148,17 @@ export class TelegramBot extends BaseBot {
                     id: data.message.chat.id,
                     type: data.message.chat.type,
                 },
-                contact: data.message?.contact
-                    ? {
-                        phone: data.message.contact.phone_number,
-                        sender: data.message.contact.user_id === data.message.from.id,
-                    }
-                    : undefined,
-                location: data.message?.location ? data.message.location : undefined,
                 text: data.message.text || data.message.caption,
-                timestamp: data.message.date,
             },
+            contact: data.message?.contact
+                ? {
+                    phone: data.message.contact.phone_number,
+                    sender: data.message.contact.user_id === data.message.from.id,
+                }
+                : undefined,
+            location: data.message?.location ? data.message.location : undefined,
+            command: commandData,
             callback: callbackData ? { data: callbackData } : undefined,
-            raw: data,
         }
     }
 

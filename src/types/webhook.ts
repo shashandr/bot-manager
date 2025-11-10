@@ -4,6 +4,7 @@ export interface BotWebhookUpdate {
     type: 'command' | 'callback' | 'text' | 'contact' | 'location'
     message: {
         id: number
+        timestamp: number
         sender: {
             id: string | number
             firstName?: string
@@ -16,20 +17,22 @@ export interface BotWebhookUpdate {
             type?: 'private' | 'group' | 'supergroup' | 'channel'
         }
         text?: string
-        contact?: {
-            phone: string
-            sender: boolean
-        }
-        location?: {
-            latitude: number
-            longitude: number
-        }
-        timestamp: number
+    }
+    contact?: {
+        phone: string
+        sender: boolean
+    }
+    location?: {
+        latitude: number
+        longitude: number
+    }
+    command?: {
+        name: string
+        value: string
     }
     callback?: {
         data: any
     }
-    raw: any
 }
 
 export interface BotWebhookContext {
@@ -127,9 +130,9 @@ export class HandlerRegistry {
     }
 
     private getCommandHandler(update: BotWebhookUpdate): Function | undefined {
-        if (!update.message.text) return undefined
+        if (!update.command) return undefined
 
-        const commandMatch = update.message.text.match(/^\/([a-zA-Z0-9_]+)/)
+        const commandMatch = update.command.name.match(/^\/([a-zA-Z0-9_]+)/)
         if (!commandMatch) return undefined
 
         const commandName = commandMatch[1].toLowerCase()
@@ -148,8 +151,6 @@ export class HandlerRegistry {
         // Проверяем регулярные выражения
         for (const [pattern, handler] of this._actions.entries()) {
             if (pattern instanceof RegExp && pattern.test(actionName)) {
-                // Сохраняем результат match для обработчика
-                update.raw = { ...update.raw, match: actionName.match(pattern) }
                 return handler
             }
         }
@@ -169,8 +170,6 @@ export class HandlerRegistry {
         // Проверяем регулярные выражения
         for (const [pattern, handler] of this._textHandlers.entries()) {
             if (pattern instanceof RegExp && pattern.test(text)) {
-                // Сохраняем результат match для обработчика
-                update.raw = { ...update.raw, match: text.match(pattern) }
                 return handler
             }
         }
