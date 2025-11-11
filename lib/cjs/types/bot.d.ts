@@ -11,6 +11,7 @@ export interface BotMessageButton {
 export interface BotMessageOptions {
     parseMode?: 'html' | 'markdown';
     buttons?: Array<BotMessageButton>;
+    disableNotification?: boolean;
 }
 export interface BotUpdateHandler {
     onText?: (ctx: any) => void | Promise<void>;
@@ -39,8 +40,8 @@ export declare abstract class Bot {
     abstract editMessage(chatId: number | string, messageId: number, text: string, options?: BotMessageOptions): Promise<boolean>;
     abstract editCaption(chatId: number | string, messageId: number, caption: string, options?: BotMessageOptions): Promise<boolean>;
     abstract getUpdate(options?: GetUpdateOptions): Promise<any>;
-    abstract onStart(): void;
-    abstract convertWebhookUpdate(update: any): BotWebhookUpdate;
+    protected abstract onStart(): void;
+    protected abstract convertWebhookUpdate(update: any): BotWebhookUpdate;
     addMessageTag(chatId: number | string, messageId: number, text: string, tag: string, options?: BotMessageOptions): Promise<boolean>;
     addFileTag(chatId: number | string, messageId: number, caption: string, tag: string, options?: BotMessageOptions): Promise<boolean>;
     protected prepareMessageText(text: string, parseMode: string): string;

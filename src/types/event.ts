@@ -5,16 +5,33 @@ export interface BotEventContext {
 }
 
 export abstract class BotEvent {
-    protected abstract readonly name: string
+    protected readonly name?: string
     protected readonly chatId: string | number
 
     protected constructor(chatId: string | number) {
         this.chatId = chatId
+        if (!this.name) {
+            this.name = this.generateEventName()
+        }
     }
 
-    getName() {
-        return this.name
+    /**
+     * @final
+     * Do not override this method in subclasses
+     */
+    getName(): string {
+        return this.name!
     }
 
     abstract handle(bot: Bot, payload: unknown): Promise<void>
+
+    private generateEventName(): string {
+        const className = this.constructor.name
+        const baseName = className.replace(/Event$/, '')
+
+        return baseName
+            .replace(/([a-z])([A-Z])/g, '$1-$2')
+            .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+            .toLowerCase()
+    }
 }

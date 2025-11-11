@@ -4,7 +4,8 @@ export declare abstract class MessengerService {
     protected bots: Map<string, Bot>;
     abstract getName(): string;
     abstract createBot(name: string, config: BotConfig, events?: BotEvent[]): Bot;
-    registerBot(name: string, token: string, events?: BotEvent[]): this;
+    registerBot(bot: Bot): this;
+    registerBot(bot: string, token: string, events?: BotEvent[]): this;
     getBots(): string[];
     getBot(name: string): Bot;
 }

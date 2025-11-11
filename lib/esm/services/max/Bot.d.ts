@@ -7,6 +7,6 @@ export declare class MaxBot extends BaseBot {
     editCaption(chatId: number | string, messageId: number, caption: string, options?: BotMessageOptions): Promise<boolean>;
     editMessage(chatId: number | string, messageId: number, text: string, options?: BotMessageOptions): Promise<boolean>;
     getUpdate(options?: GetUpdateOptions): Promise<any>;
-    onStart(): void;
-    convertWebhookUpdate(data: any): BotWebhookUpdate;
+    protected onStart(): void;
+    protected convertWebhookUpdate(data: any): BotWebhookUpdate;
 }

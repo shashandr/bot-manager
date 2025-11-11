@@ -1,33 +1,37 @@
 import { Bot } from './bot';
 export interface BotWebhookUpdate {
     type: 'command' | 'callback' | 'text' | 'contact' | 'location';
-    message: {
+    sender: {
         id: string | number;
-        sender: {
-            id: string | number;
-            firstName?: string;
-            lastName?: string;
-            username?: string;
-            isBot?: boolean;
-        };
-        chat: {
-            id: string | number;
-            type?: 'private' | 'group' | 'supergroup' | 'channel';
-        };
-        text?: string;
-        contact?: {
-            phone: string;
-        };
-        location?: {
-            latitude: number;
-            longitude: number;
-        };
+        firstName?: string;
+        lastName?: string;
+        username?: string;
+        isBot?: boolean;
+    };
+    chat: {
+        id: string | number;
+        type?: 'private' | 'group' | 'supergroup' | 'channel';
+    };
+    message: {
+        id: number;
         timestamp: number;
+        text?: string;
+    };
+    contact?: {
+        phone: string;
+        sender: boolean;
+    };
+    location?: {
+        latitude: number;
+        longitude: number;
+    };
+    command?: {
+        name: string;
+        value?: string;
     };
     callback?: {
         data: any;
     };
-    raw: any;
 }
 export interface BotWebhookContext {
     payload: BotWebhookUpdate;

@@ -8,8 +8,8 @@ export declare class TelegramBot extends BaseBot {
     editMessage(chatId: number | string, messageId: number, text: string, options?: BotMessageOptions): Promise<boolean>;
     editCaption(chatId: number | string, messageId: number, caption: string, options?: BotMessageOptions): Promise<boolean>;
     getUpdate(options?: GetUpdateOptions): Promise<any>;
-    onStart(): void;
-    convertWebhookUpdate(data: any): BotWebhookUpdate;
+    protected onStart(): void;
+    protected convertWebhookUpdate(data: any): BotWebhookUpdate;
     private prepareKeyboard;
     private toCallbackData;
 }

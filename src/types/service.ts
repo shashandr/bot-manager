@@ -8,13 +8,32 @@ export abstract class MessengerService {
 
     abstract createBot(name: string, config: BotConfig, events?: BotEvent[]): Bot
 
-    registerBot(name: string, token: string, events?: BotEvent[]): this {
-        if (this.bots.has(name)) {
-            throw new Error(`Bot with name ${name} already registered`)
+    registerBot(bot: Bot): this;
+    registerBot(bot: string, token: string, events?: BotEvent[]): this;
+    registerBot(bot: string | Bot, token?: string, events?: BotEvent[]): this {
+        let botName: string
+        let botObj: Bot
+
+        if (typeof bot === 'string') {
+            botName = bot
+        } else {
+            botName = bot.getName()
         }
 
-        const bot = this.createBot(name, { token }, events)
-        this.bots.set(name, bot)
+        if (this.bots.has(botName)) {
+            throw new Error(`Bot with name ${botName} already registered`)
+        }
+
+        if (typeof bot === 'string') {
+            if (!token) {
+                throw new Error(`Token required`)
+            }
+            botObj = this.createBot(botName, { token }, events)
+        } else {
+            botObj = bot
+        }
+
+        this.bots.set(botName, botObj)
 
         return this
     }
