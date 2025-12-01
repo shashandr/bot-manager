@@ -5,14 +5,12 @@ export interface BotEventContext {
 }
 
 export abstract class BotEvent {
-    protected readonly name?: string
+    protected readonly name: string
     protected readonly chatId: string | number
 
-    protected constructor(chatId: string | number) {
+    protected constructor(chatId: string | number, name?: string) {
         this.chatId = chatId
-        if (!this.name) {
-            this.name = this.generateEventName()
-        }
+        this.name = name || this.generateEventName()
     }
 
     /**
