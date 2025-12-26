@@ -133,7 +133,11 @@ export abstract class Bot {
             )
         }
 
-        await event.handle(this, payload)
+        try {
+            await event.handle(this, payload)
+        } catch (err) {
+            throw new Error(`Handle event '${eventName}' error for bot '${this.name}': ${(err as Error).message}`)
+        }
     }
 
     registerWebhook(webhook: BotWebhook): this {
@@ -147,16 +151,20 @@ export abstract class Bot {
             return
         }
 
-        const payload = this.convertWebhookUpdate(update)
-        const handler = this.webhook.getHandler(payload)
+        try {
+            const payload = this.convertWebhookUpdate(update)
+            const handler = this.webhook.getHandler(payload)
 
-        if (handler) {
-            await handler(this, payload)
-        } else {
-            const unknownHandler = (this.webhook as any).handleUnknown
-            if (typeof unknownHandler === 'function') {
-                await unknownHandler.call(this.webhook, this, payload)
+            if (handler) {
+                await handler(this, payload)
+            } else {
+                const unknownHandler = (this.webhook as any).handleUnknown
+                if (typeof unknownHandler === 'function') {
+                    await unknownHandler.call(this.webhook, this, payload)
+                }
             }
+        } catch (err) {
+            throw new Error(`Handle webhook error for bot '${this.name}': ${(err as Error).message}`)
         }
     }
 
@@ -166,8 +174,15 @@ export abstract class Bot {
 
     start(webhook: BotWebhook): void {
         this.registerWebhook(webhook)
-        if (this.webhook) {
+
+        if (!this.webhook) {
+            return
+        }
+
+        try {
             this.onStart()
+        } catch (err) {
+            throw new Error(`Webhook start error for bot '${this.name}': ${(err as Error).message}`)
         }
     }
 }
