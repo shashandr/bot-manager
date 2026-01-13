@@ -11,6 +11,6 @@ export class Service extends MessengerService {
     }
 
     createBot(name: string, config: BotConfig, events: BotEvent[] = []): Bot {
-        return new TelegramBot(name, config, events)
+        return new TelegramBot(name, config, events, this)
     }
 }

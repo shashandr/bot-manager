@@ -1,5 +1,6 @@
 import { BotWebhook, BotWebhookUpdate } from './webhook';
 import { BotEvent } from './event';
+import { MessengerService } from "~/types/service";
 export interface BotConfig {
     token: string;
 }
@@ -25,17 +26,19 @@ export interface GetUpdateOptions {
     allowedUpdates?: string[];
 }
 export declare abstract class Bot {
-    protected name: string;
-    protected config: BotConfig;
+    protected readonly name: string;
+    protected readonly serviceName?: string;
+    protected readonly config: BotConfig;
+    protected readonly instance: any;
     protected events: Map<string, BotEvent>;
     protected webhook?: BotWebhook;
-    protected instance: any;
     protected defaultParseMode: string;
-    constructor(name: string, config: BotConfig, events?: BotEvent[]);
+    constructor(name: string, config: BotConfig, events?: BotEvent[], service?: MessengerService);
     protected abstract createInstance(token: string): any;
     getName(): string;
-    getInstance(): any;
+    getServiceName(): string | undefined;
     getConfig(): BotConfig;
+    getInstance(): any;
     abstract sendMessage(chatId: number | string, text: string, options?: BotMessageOptions): Promise<boolean>;
     abstract sendFile(chatId: number | string, file: any, caption?: string, options?: BotMessageOptions): Promise<boolean>;
     abstract editMessage(chatId: number | string, messageId: number | string, text: string, options?: BotMessageOptions): Promise<boolean>;

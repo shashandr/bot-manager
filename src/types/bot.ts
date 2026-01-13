@@ -2,6 +2,7 @@ import { BotWebhook, BotWebhookUpdate } from './webhook'
 import { BotEvent } from './event'
 import { pregMatchAll, stripTags } from '~/lib/strings'
 import { getFileType } from '~/lib/files'
+import { MessengerService } from "~/types/service";
 
 export interface BotConfig {
     token: string
@@ -33,15 +34,19 @@ export interface GetUpdateOptions {
 }
 
 export abstract class Bot {
-    protected name: string
-    protected config: BotConfig
+    protected readonly name: string
+    protected readonly serviceName?: string
+    protected readonly config: BotConfig
+    protected readonly instance: any
     protected events: Map<string, BotEvent> = new Map()
     protected webhook?: BotWebhook
-    protected instance: any
     protected defaultParseMode = 'html'
 
-    constructor(name: string, config: BotConfig, events: BotEvent[] = []) {
+    constructor(name: string, config: BotConfig, events: BotEvent[] = [], service?: MessengerService) {
         this.name = name
+        if (service) {
+            this.serviceName = service.getName()
+        }
         this.config = config
         this.instance = this.createInstance(config.token)
 
@@ -56,12 +61,16 @@ export abstract class Bot {
         return this.name
     }
 
-    getInstance() {
-        return this.instance
+    getServiceName(): string | undefined {
+        return this.serviceName
     }
 
     getConfig(): BotConfig {
         return this.config
+    }
+
+    getInstance() {
+        return this.instance
     }
 
     abstract sendMessage(chatId: number | string, text: string, options?: BotMessageOptions): Promise<boolean>
