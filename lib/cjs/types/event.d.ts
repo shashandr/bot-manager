@@ -3,14 +3,17 @@ export interface BotEventContext {
     payload: unknown;
 }
 export declare abstract class BotEvent {
-    protected readonly name?: string;
+    private _bot?;
+    protected readonly name: string;
     protected readonly chatId: string | number;
-    protected constructor(chatId: string | number);
+    protected constructor(chatId: string | number, name?: string);
     /**
      * @final
      * Do not override this method in subclasses
      */
     getName(): string;
-    abstract handle(bot: Bot, payload: unknown): Promise<void>;
+    abstract handle(payload: unknown): Promise<void>;
     private generateEventName;
+    get bot(): Readonly<Bot>;
+    set bot(bot: Bot);
 }

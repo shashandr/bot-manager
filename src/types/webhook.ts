@@ -14,7 +14,7 @@ export interface BotWebhookUpdate {
         type?: 'private' | 'group' | 'supergroup' | 'channel'
     }
     message: {
-        id: number
+        id: string | number
         timestamp: number
         text?: string
     }
@@ -180,12 +180,40 @@ export class HandlerRegistry {
 
 // Базовый класс вебхука с композицией и поддержкой декораторов
 export abstract class BotWebhook {
-    protected registry: HandlerRegistry
+    protected readonly registry: HandlerRegistry
+    private _bot?: Bot
 
     constructor() {
         this.registry = new HandlerRegistry()
         this.setupFromDecorators()
         this.registerHandlers()
+    }
+
+    get bot(): Readonly<Bot> {
+        if (!this._bot) {
+            throw new Error('Bot is not initialized. Set bot property first or use start() method.')
+        }
+        return this._bot as Readonly<Bot>
+    }
+
+    set bot(bot: Bot) {
+        // Проверка на переопределение бота
+        if (this._bot) {
+            throw new Error('Bot is already set and cannot be redefined.')
+        }
+
+        // Создаем readonly proxy для бота, чтобы предотвратить изменения свойств бота
+        this._bot = new Proxy(bot, {
+            set: () => {
+                throw new Error('Bot is readonly. Cannot modify bot properties.')
+            },
+            defineProperty: () => {
+                throw new Error('Bot is readonly. Cannot define new properties.')
+            },
+            deleteProperty: () => {
+                throw new Error('Bot is readonly. Cannot delete properties.')
+            },
+        }) as Bot
     }
 
     /**
@@ -256,23 +284,23 @@ export abstract class BotWebhook {
     /**
      * Вспомогательные методы для ручной регистрации
      */
-    protected registerCommandHandler(command: string, handler: (bot: Bot, payload: BotWebhookUpdate) => void) {
+    protected registerCommandHandler(command: string, handler: (payload: BotWebhookUpdate) => void) {
         this.registry.registerCommand(command, handler)
     }
 
-    protected registerActionHandler(pattern: string | RegExp, handler: (bot: Bot, payload: BotWebhookUpdate) => void) {
+    protected registerActionHandler(pattern: string | RegExp, handler: (payload: BotWebhookUpdate) => void) {
         this.registry.registerAction(pattern, handler)
     }
 
-    protected registerTextHandler(pattern: string | RegExp, handler: (bot: Bot, payload: BotWebhookUpdate) => void) {
+    protected registerTextHandler(pattern: string | RegExp, handler: (payload: BotWebhookUpdate) => void) {
         this.registry.registerText(pattern, handler)
     }
 
-    protected registerContactHandler(handler: (bot: Bot, payload: BotWebhookUpdate) => void) {
+    protected registerContactHandler(handler: (payload: BotWebhookUpdate) => void) {
         this.registry.registerContact(handler)
     }
 
-    protected registerLocationHandler(handler: (bot: Bot, payload: BotWebhookUpdate) => void) {
+    protected registerLocationHandler(handler: (payload: BotWebhookUpdate) => void) {
         this.registry.registerLocation(handler)
     }
 }

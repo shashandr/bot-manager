@@ -13,7 +13,7 @@ export interface BotWebhookUpdate {
         type?: 'private' | 'group' | 'supergroup' | 'channel';
     };
     message: {
-        id: number;
+        id: string | number;
         timestamp: number;
         text?: string;
     };
@@ -58,8 +58,11 @@ export declare class HandlerRegistry {
     private getTextHandler;
 }
 export declare abstract class BotWebhook {
-    protected registry: HandlerRegistry;
+    protected readonly registry: HandlerRegistry;
+    private _bot?;
     constructor();
+    get bot(): Readonly<Bot>;
+    set bot(bot: Bot);
     /**
      * Автоматическая регистрация обработчиков из декораторов
      */
@@ -75,9 +78,9 @@ export declare abstract class BotWebhook {
     /**
      * Вспомогательные методы для ручной регистрации
      */
-    protected registerCommandHandler(command: string, handler: (bot: Bot, payload: BotWebhookUpdate) => void): void;
-    protected registerActionHandler(pattern: string | RegExp, handler: (bot: Bot, payload: BotWebhookUpdate) => void): void;
-    protected registerTextHandler(pattern: string | RegExp, handler: (bot: Bot, payload: BotWebhookUpdate) => void): void;
-    protected registerContactHandler(handler: (bot: Bot, payload: BotWebhookUpdate) => void): void;
-    protected registerLocationHandler(handler: (bot: Bot, payload: BotWebhookUpdate) => void): void;
+    protected registerCommandHandler(command: string, handler: (payload: BotWebhookUpdate) => void): void;
+    protected registerActionHandler(pattern: string | RegExp, handler: (payload: BotWebhookUpdate) => void): void;
+    protected registerTextHandler(pattern: string | RegExp, handler: (payload: BotWebhookUpdate) => void): void;
+    protected registerContactHandler(handler: (payload: BotWebhookUpdate) => void): void;
+    protected registerLocationHandler(handler: (payload: BotWebhookUpdate) => void): void;
 }

@@ -11,5 +11,5 @@ export declare class TelegramBot extends BaseBot {
     protected onStart(): void;
     protected convertWebhookUpdate(data: any): BotWebhookUpdate;
     private prepareKeyboard;
-    private toCallbackData;
+    protected toCallbackData(value: unknown, fallback: string): string;
 }

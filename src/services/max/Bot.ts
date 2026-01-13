@@ -1,5 +1,10 @@
-import { Bot as MaxBotApi } from '@maxhub/max-bot-api'
-import { Bot as BaseBot, BotMessageOptions, GetUpdateOptions, BotWebhookUpdate } from "~/types"
+import { Bot as MaxBotApi, Keyboard } from '@maxhub/max-bot-api'
+import { Bot as BaseBot, BotMessageOptions, GetUpdateOptions, BotWebhookUpdate, BotMessageButton } from '~/types'
+import { ActionResponse, Message } from '@maxhub/max-bot-api/dist/core/network/api'
+import { MediaAttachment } from '@maxhub/max-bot-api/dist/core/helpers/attachments'
+import { vcfExtractPhone } from '~/lib/strings'
+import { downloadToTemp } from '~/lib/files'
+import * as fs from 'fs'
 
 export class MaxBot extends BaseBot {
     protected createInstance(token: string): MaxBotApi {
@@ -10,59 +15,112 @@ export class MaxBot extends BaseBot {
         const bot = this.instance as MaxBotApi
         const extra: Record<string, unknown> = {}
 
-        if (options?.parseMode) extra.parse_mode = options.parseMode
-        if (options?.buttons) {
-            Object.assign(extra, {
-                type: 'inline_keyboard',
-                payload: { buttons: [options.buttons] },
-            })
+        extra.format = options?.parseMode || this.defaultParseMode
+        extra.notify = !options?.disableNotification
+
+        if (options?.buttons && options.buttons.length > 0) {
+            const keyboard = this.prepareKeyboard(options.buttons)
+            keyboard && Object.assign(extra, { attachments: [ keyboard ] })
         }
 
-        const isChat = typeof chatId === 'string' && chatId.startsWith('-')
+        const isGroup = typeof chatId === 'string' && chatId.startsWith('-')
 
-        isChat
+        text = this.prepareMessageText(text, extra.format as string)
+
+        isGroup
             ? await bot.api.sendMessageToChat(Number(chatId), text, extra)
             : await bot.api.sendMessageToUser(Number(chatId), text, extra)
 
         return true
     }
 
-    async sendFile(chatId: number | string, file: any, caption?: string): Promise<boolean> {
+    async sendFile(chatId: number | string, file: any, caption?: string, options?: BotMessageOptions): Promise<boolean> {
         const bot = this.instance as MaxBotApi
+        const extra: Record<string, unknown> = {}
+
         const fileName = typeof file === 'string' ? file : file.filename
         if (!fileName) {
             return false
         }
         const fileType = this.getMediaType(fileName)
-        let attachment
+        const isUrl = typeof file === 'string' && /^https?:\/\//i.test(file)
+        let attachment: MediaAttachment | null = null
+        let tempPath: string | null = null
 
-        if (fileType && ['image', 'photo'].includes(fileType)) {
-            attachment = await bot.api.uploadImage({ file } as any)
-        } else {
-            attachment = await bot.api.uploadFile({ file } as any)
+        try {
+            if (fileType && ['image', 'photo'].includes(fileType) && isUrl) {
+                attachment = await bot.api.uploadImage({ url: file })
+            } else {
+                const sourcePath = isUrl ? await downloadToTemp(file) : file
+                tempPath = isUrl ? sourcePath : null
+
+                if (fileType === 'audio') {
+                    attachment = await bot.api.uploadAudio({ source: sourcePath })
+                } else if (fileType === 'video') {
+                    attachment = await bot.api.uploadVideo({ source: sourcePath })
+                } else {
+                    attachment = await bot.api.uploadFile({ source: sourcePath })
+                }
+            }
+        } catch (err) {
+            throw err
+        } finally {
+            if (tempPath) {
+                fs.promises.unlink(tempPath).catch(() => {})
+            }
         }
 
-        await bot.api.sendMessageToChat(Number(chatId), caption || '', {
-            attachments: [attachment as any],
-        } as any)
+        if (!attachment) {
+            return false
+        }
+
+        extra.format = options?.parseMode || this.defaultParseMode
+        extra.notify = !options?.disableNotification
+        extra.attachments = [attachment.toJson()]
+
+        if (options?.buttons && options.buttons.length > 0) {
+            const keyboard = this.prepareKeyboard(options.buttons)
+            // @ts-ignore
+            keyboard && extra.attachments.push(keyboard)
+        }
+
+        const isGroup = typeof chatId === 'string' && chatId.startsWith('-')
+
+        caption = this.prepareMessageText(caption || '', extra.format as string)
+
+        isGroup
+            ? await bot.api.sendMessageToChat(Number(chatId), caption, extra)
+            : await bot.api.sendMessageToUser(Number(chatId), caption, extra)
 
         return true
     }
 
-    editCaption(chatId: number | string, messageId: number, caption: string, options?: BotMessageOptions): Promise<boolean> {
-        return Promise.resolve(false);
+    async editMessage(chatId: number | string, messageId: string, text: string, options?: BotMessageOptions): Promise<boolean> {
+        const bot = this.instance as MaxBotApi
+        const extra: Record<string, unknown> = {}
+
+        const message: Message = await bot.api.getMessage(messageId)
+
+        extra.format = options?.parseMode || this.defaultParseMode
+        extra.notify = options?.disableNotification
+        extra.text = this.prepareMessageText(text, extra.format as string)
+        extra.attachments = message.body.attachments
+            ? message.body.attachments.filter(attachment => attachment.type !== 'inline_keyboard')
+            : []
+
+        const response: ActionResponse = await bot.api.editMessage(messageId, extra)
+
+        return response.success
     }
 
-    editMessage(chatId: number | string, messageId: number, text: string, options?: BotMessageOptions): Promise<boolean> {
-        return Promise.resolve(false);
+    async editCaption(chatId: number | string, messageId: string, caption: string, options?: BotMessageOptions): Promise<boolean> {
+        return await this.editMessage(chatId, messageId, caption, options)
     }
 
     async getUpdate(options?: GetUpdateOptions): Promise<any> {
-        const bot = this.instance as MaxBotApi
-
         // Max Bot API может иметь метод getUpdates
         // Если нет, используем альтернативный подход через API
-        if (typeof (bot.api as any).getUpdates === 'function') {
+        if (typeof this.instance.api.getUpdates === 'function') {
             const params: Record<string, unknown> = {}
 
             if (options?.offset !== undefined) params.offset = options.offset
@@ -70,7 +128,7 @@ export class MaxBot extends BaseBot {
             if (options?.timeout !== undefined) params.timeout = options.timeout
             if (options?.allowedUpdates) params.allowed_updates = options.allowedUpdates
 
-            return (bot.api as any).getUpdates(params)
+            return this.instance.api.getUpdates(params)
         }
 
         // Если метод недоступен, возвращаем ошибку или пустой массив
@@ -79,59 +137,109 @@ export class MaxBot extends BaseBot {
         )
     }
 
-    protected onStart() {
+    private prepareKeyboard(buttons: BotMessageButton[]): any {
+        const inlineKeyboardButtons: any = []
 
+        buttons.forEach((btn: BotMessageButton) => {
+            if (btn?.type) {
+                switch (btn.type) {
+                    case 'request_contact':
+                        inlineKeyboardButtons.push(Keyboard.button.requestContact(btn.text))
+                        break
+                    case 'link':
+                        const url = (btn as any)?.payload?.url
+                        if (typeof url === 'string' && url.length > 0) {
+                            inlineKeyboardButtons.push(Keyboard.button.link(btn.text, url))
+                        }
+                        break
+                    case 'location':
+                        inlineKeyboardButtons.push(Keyboard.button.requestGeoLocation(btn.text))
+                        break
+                    default:
+                        const callbackData = this.toCallbackData((btn as any)?.payload, btn.text)
+                        inlineKeyboardButtons.push(Keyboard.button.callback(btn.text, callbackData))
+                }
+            }
+        })
+
+        if (inlineKeyboardButtons.length) {
+            return Keyboard.inlineKeyboard([inlineKeyboardButtons])
+        }
+
+        return null
+    }
+
+    protected onStart() {
+        this.instance.on('message_created', async (ctx: any) => {
+            await this.handleWebhook(ctx.update)
+        })
+        this.instance.on('message_callback', async (ctx: any) => {
+            await this.handleWebhook(ctx.update)
+        })
+        this.instance.start()
     }
 
     protected convertWebhookUpdate(data: any): BotWebhookUpdate {
         let type: BotWebhookUpdate['type'] = 'text'
         let commandData: any = undefined
         let callbackData: any = undefined
+        let contact = undefined
+        let location = undefined
+        let sender = data.message.sender
 
-        if (data?.data) {
-            callbackData = JSON.parse(data.data)
-            if (callbackData) {
-                type = 'callback'
-            }
-        } else if (data.message?.text && data.message.text.startsWith('/')) {
+        if (data?.update_type === 'message_callback') {
+            type = 'callback'
+            sender = data.callback.user
+            callbackData = data.callback.payload.startsWith('{') ? JSON.parse(data.callback.payload) : data.callback.payload
+        } else if (data.message?.body.text && data.message.body.text.startsWith('/')) {
             type = 'command'
-            const commandParts = data.message.text.includes('=')
-                ? data.message.text.split('=')
-                : [data.message.text, null]
+            const commandParts = data.message.body.text.includes('=')
+                ? data.message.body.text.split('=')
+                : [data.message.body.text, null]
             commandData = {
                 name: commandParts[0],
                 value: commandParts[1],
             }
-        } else if (data.message?.contact) {
-            type = 'contact'
-        } else if (data.message?.location) {
-            type = 'location'
+        } else if (data.message.body?.attachments) {
+            data.message.body.attachments.forEach((attachment: any) => {
+                switch (attachment.type) {
+                    case 'contact':
+                        type = 'contact'
+                        contact = {
+                            phone: vcfExtractPhone(attachment.payload.vcf_info),
+                            sender: attachment.payload.max_info.user_id === data.message.sender.user_id,
+                        }
+                        break
+                    case 'location':
+                        type = 'location'
+                        location = {
+                            latitude: attachment.latitude,
+                            longitude: attachment.longitude,
+                        }
+                        break
+                }
+            })
         }
 
         return {
             type,
             sender: {
-                id: data.message.sender.user_id,
-                firstName: data.message.sender.first_name,
-                lastName: data.message.sender.last_name,
-                username: data.message.sender.username,
-                isBot: data.message.sender.is_bot,
+                id: sender.user_id,
+                firstName: sender.first_name,
+                lastName: sender.last_name,
+                username: sender.username,
+                isBot: sender.is_bot,
             },
             chat: {
-                id: data.message.chat.id,
+                id: data.message.recipient.chat_id,
             },
             message: {
-                id: data.message.message_id,
-                text: data.message.text,
-                timestamp: data.message.date,
+                id: data.message.body.mid,
+                text: data.message.body.text,
+                timestamp: data.message.timestamp,
             },
-            contact: data.message?.contact
-                ? {
-                    phone: data.message.contact.phone_number,
-                    sender: data.message.contact.user_id === data.message.from.id,
-                }
-                : undefined,
-            location: data.message?.location ? data.message.location : undefined,
+            contact,
+            location,
             command: commandData,
             callback: callbackData ? { data: callbackData } : undefined,
         }

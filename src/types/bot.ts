@@ -38,6 +38,7 @@ export abstract class Bot {
     protected events: Map<string, BotEvent> = new Map()
     protected webhook?: BotWebhook
     protected instance: any
+    protected defaultParseMode = 'html'
 
     constructor(name: string, config: BotConfig, events: BotEvent[] = []) {
         this.name = name
@@ -67,9 +68,9 @@ export abstract class Bot {
 
     abstract sendFile(chatId: number | string, file: any, caption?: string, options?: BotMessageOptions): Promise<boolean>
 
-    abstract editMessage(chatId: number | string, messageId: number, text: string, options?: BotMessageOptions): Promise<boolean>
+    abstract editMessage(chatId: number | string, messageId: number | string, text: string, options?: BotMessageOptions): Promise<boolean>
 
-    abstract editCaption(chatId: number | string, messageId: number, caption: string, options?: BotMessageOptions): Promise<boolean>
+    abstract editCaption(chatId: number | string, messageId: number | string, caption: string, options?: BotMessageOptions): Promise<boolean>
 
     abstract getUpdate(options?: GetUpdateOptions): Promise<any>
 
@@ -77,13 +78,13 @@ export abstract class Bot {
 
     protected abstract convertWebhookUpdate(update: any): BotWebhookUpdate
 
-    async addMessageTag(chatId: number | string, messageId: number, text: string, tag: string, options?: BotMessageOptions): Promise<boolean> {
+    async addMessageTag(chatId: number | string, messageId: number | string, text: string, tag: string, options?: BotMessageOptions): Promise<boolean> {
         text = this.appendTag(text, tag)
 
         return await this.editMessage(chatId, messageId, text, options)
     }
 
-    async addFileTag(chatId: number | string, messageId: number, caption: string, tag: string, options?: BotMessageOptions): Promise<boolean> {
+    async addFileTag(chatId: number | string, messageId: number | string, caption: string, tag: string, options?: BotMessageOptions): Promise<boolean> {
         caption = this.appendTag(caption, tag)
 
         return await this.editCaption(chatId, messageId, caption, options)
@@ -114,11 +115,22 @@ export abstract class Bot {
         return text
     }
 
+    protected toCallbackData(value: unknown, fallback: string): string {
+        let data: string
+        if (typeof value === 'string') data = value
+        else if (typeof value === 'number' || typeof value === 'boolean') data = String(value)
+        else if (value != null) data = JSON.stringify(value)
+        else data = fallback
+
+        return data
+    }
+
     getEvents(): string[] {
         return Array.from(this.events.keys())
     }
 
     registerEvent(event: BotEvent): this {
+        event.bot = this
         this.events.set(event.getName(), event)
 
         return this
@@ -128,13 +140,11 @@ export abstract class Bot {
         const event = this.events.get(eventName)
 
         if (!event) {
-            throw new Error(
-                `Event handler for '${eventName}' not registered for bot '${this.name}'`
-            )
+            throw new Error(`Event handler for '${eventName}' not registered for bot '${this.name}'`)
         }
 
         try {
-            await event.handle(this, payload)
+            await event.handle(payload)
         } catch (err) {
             throw new Error(`Handle event '${eventName}' error for bot '${this.name}': ${(err as Error).message}`)
         }
@@ -142,6 +152,7 @@ export abstract class Bot {
 
     registerWebhook(webhook: BotWebhook): this {
         this.webhook = webhook
+        this.webhook.bot = this
 
         return this
     }
@@ -156,11 +167,11 @@ export abstract class Bot {
             const handler = this.webhook.getHandler(payload)
 
             if (handler) {
-                await handler(this, payload)
+                await handler(payload)
             } else {
                 const unknownHandler = (this.webhook as any).handleUnknown
                 if (typeof unknownHandler === 'function') {
-                    await unknownHandler.call(this.webhook, this, payload)
+                    await unknownHandler.call(this.webhook, payload)
                 }
             }
         } catch (err) {

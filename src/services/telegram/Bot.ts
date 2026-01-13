@@ -17,7 +17,7 @@ export class TelegramBot extends BaseBot {
         const bot = this.instance as Telegraf<Context>
         const extra: Record<string, unknown> = {}
 
-        extra.parse_mode = options?.parseMode || 'html'
+        extra.parse_mode = options?.parseMode || this.defaultParseMode
         extra.disable_notification = options?.disableNotification || false
 
         if (options?.buttons && options.buttons.length > 0) {
@@ -41,7 +41,7 @@ export class TelegramBot extends BaseBot {
 
         const fileType = this.getMediaType(fileName)
 
-        extra.parse_mode = options?.parseMode || 'html'
+        extra.parse_mode = options?.parseMode || this.defaultParseMode
         extra.caption = this.prepareMessageText(caption || '', extra.parse_mode as string)
         extra.disable_notification = options?.disableNotification || false
 
@@ -63,7 +63,7 @@ export class TelegramBot extends BaseBot {
         const bot = this.instance as Telegraf<Context>
 
         const extra: Record<string, unknown> = {}
-        extra.parse_mode = options?.parseMode || 'html'
+        extra.parse_mode = options?.parseMode || this.defaultParseMode
         extra.disable_notification = options?.disableNotification || true
 
         await bot.telegram.editMessageText(chatId, messageId, undefined, this.prepareMessageText(text || '', extra.parse_mode as string), extra)
@@ -75,7 +75,7 @@ export class TelegramBot extends BaseBot {
         const bot = this.instance as Telegraf<Context>
 
         const extra: Record<string, unknown> = {}
-        extra.parse_mode = options?.parseMode || 'html'
+        extra.parse_mode = options?.parseMode || this.defaultParseMode
         extra.disable_notification = options?.disableNotification || true
 
         await bot.telegram.editMessageCaption(chatId, messageId, undefined, this.prepareMessageText(caption || '', extra.parse_mode as string), extra)
@@ -212,12 +212,9 @@ export class TelegramBot extends BaseBot {
         return result
     }
 
-    private toCallbackData(value: unknown, fallback: string): string {
-        let data: string
-        if (typeof value === 'string') data = value
-        else if (typeof value === 'number' || typeof value === 'boolean') data = String(value)
-        else if (value != null) data = JSON.stringify(value)
-        else data = fallback
+    protected toCallbackData(value: unknown, fallback: string): string {
+        let data: string = super.toCallbackData(value, fallback)
+
         // Telegram limit for callback_data is 1-64 bytes; keep it simple with char limit
         if (data.length > 64) data = data.slice(0, 64)
 

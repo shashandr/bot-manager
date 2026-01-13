@@ -23,3 +23,17 @@ export const pregMatchAll = (regex: RegExp, str: string): string[] => {
         return acc
     }, [])
 }
+
+export const vcfExtractPhone = (vcf: string): string | null =>  {
+    const telLine = vcf
+        .split('\n')
+        .find((line: string) => line.startsWith('TEL'))
+
+    if (telLine) {
+        const phone = telLine.split(':')[1]
+
+        return phone ? phone.trim() : null
+    }
+
+    return null
+}
