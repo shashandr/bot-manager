@@ -71,6 +71,8 @@ export declare abstract class BotWebhook {
      * Абстрактный метод для ручной регистрации обработчиков (альтернатива декораторам)
      */
     protected registerHandlers(): void;
+    protected onGetHandlerBefore(update: BotWebhookUpdate): void;
+    protected onGetHandlerAfter(update: BotWebhookUpdate, handler: Function | undefined): void;
     /**
      * Получить обработчик для входящего обновления
      */
