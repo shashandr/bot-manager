@@ -243,13 +243,11 @@ export class MaxBot extends BaseBot {
             chat: {
                 id: data?.message?.recipient.chat_id || data.chat_id,
             },
-            message: data?.message?.body
-                ? {
-                    id: data.message.body.mid,
-                    text: data.message.body.text,
-                    timestamp: data.message.timestamp,
-                }
-                : undefined,
+            message: {
+                id: data?.message?.body.mid || 0,
+                text: data?.message?.body.text,
+                timestamp: data?.message?.timestamp || data.timestamp,
+            },
             contact,
             location,
             command: commandData,

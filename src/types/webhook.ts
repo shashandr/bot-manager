@@ -14,7 +14,7 @@ export interface BotWebhookUpdate {
         id: string | number
         type?: 'private' | 'group' | 'supergroup' | 'channel'
     }
-    message?: {
+    message: {
         id: string | number
         timestamp: number
         text?: string
