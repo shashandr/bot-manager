@@ -2,7 +2,7 @@ import { Bot as MaxBotApi, Keyboard } from '@maxhub/max-bot-api'
 import { Bot as BaseBot, BotMessageOptions, GetUpdateOptions, BotWebhookUpdate, BotMessageButton } from '~/types'
 import { ActionResponse, Message } from '@maxhub/max-bot-api/dist/core/network/api'
 import { MediaAttachment } from '@maxhub/max-bot-api/dist/core/helpers/attachments'
-import { vcfExtractPhone } from '~/lib/strings'
+import { splitFirst, vcfExtractPhone } from '~/lib/strings'
 import { downloadToTemp } from '~/lib/files'
 import * as fs from 'fs'
 
@@ -170,6 +170,9 @@ export class MaxBot extends BaseBot {
     }
 
     protected onStart() {
+        this.instance.on('bot_started', async (ctx: any) => {
+            await this.handleWebhook(ctx.update)
+        })
         this.instance.on('message_created', async (ctx: any) => {
             await this.handleWebhook(ctx.update)
         })
@@ -185,19 +188,26 @@ export class MaxBot extends BaseBot {
         let callbackData: any = undefined
         let contact = undefined
         let location = undefined
-        let sender = data.message.sender
+        let sender = data?.message?.sender
 
         if (data?.update_type === 'message_callback') {
             type = 'callback'
             sender = data.callback.user
             callbackData = data.callback.payload.startsWith('{') ? JSON.parse(data.callback.payload) : data.callback.payload
+        } else if (data?.update_type === 'bot_started') {
+            type = 'command'
+            sender = data.user
+            commandData = {
+                name: 'start',
+                value: data.payload,
+            }
         } else if (data.message?.body.text && data.message.body.text.startsWith('/')) {
             type = 'command'
             const commandParts = data.message.body.text.includes('=')
-                ? data.message.body.text.split('=')
+                ? splitFirst(data.message.body.text, '=')
                 : [data.message.body.text, null]
             commandData = {
-                name: commandParts[0],
+                name: commandParts[0].replace('/', ''),
                 value: commandParts[1],
             }
         } else if (data.message.body?.attachments) {
@@ -227,17 +237,19 @@ export class MaxBot extends BaseBot {
                 id: sender.user_id,
                 firstName: sender.first_name,
                 lastName: sender.last_name,
-                username: sender.username,
+                username: sender?.username,
                 isBot: sender.is_bot,
             },
             chat: {
-                id: data.message.recipient.chat_id,
+                id: data?.message?.recipient.chat_id || data.chat_id,
             },
-            message: {
-                id: data.message.body.mid,
-                text: data.message.body.text,
-                timestamp: data.message.timestamp,
-            },
+            message: data?.message?.body
+                ? {
+                    id: data.message.body.mid,
+                    text: data.message.body.text,
+                    timestamp: data.message.timestamp,
+                }
+                : undefined,
             contact,
             location,
             command: commandData,

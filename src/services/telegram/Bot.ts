@@ -124,14 +124,8 @@ export class TelegramBot extends BaseBot {
                 ? data.message.text.split(' ')
                 : [data.message.text, null]
 
-            if (commandParts[0] === 'start' && commandParts[1] && commandParts[1].includes('=')) {
-                const valueParts = commandParts[1].split('=')
-                commandParts[0] = valueParts[0]
-                commandParts[1] = valueParts[1]
-            }
-
             commandData = {
-                name: commandParts[0],
+                name: commandParts[0].replace('/', ''),
                 value: commandParts[1],
             }
         } else if (data.message?.contact) {

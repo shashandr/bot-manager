@@ -1,4 +1,5 @@
 import { Bot } from './bot'
+import { splitFirst } from "~/lib/strings";
 
 export interface BotWebhookUpdate {
     type: 'command' | 'callback' | 'text' | 'contact' | 'location'
@@ -13,7 +14,7 @@ export interface BotWebhookUpdate {
         id: string | number
         type?: 'private' | 'group' | 'supergroup' | 'channel'
     }
-    message: {
+    message?: {
         id: string | number
         timestamp: number
         text?: string
@@ -132,7 +133,13 @@ export class HandlerRegistry {
     private getCommandHandler(update: BotWebhookUpdate): Function | undefined {
         if (!update.command) return undefined
 
-        const commandMatch = update.command.name.match(/^\/([a-zA-Z0-9_]+)/)
+        if (update.command.name === 'start' && update.command.value && update.command.value.includes('=')) {
+            const parts = splitFirst(update.command.value, '=')
+            update.command.name = parts[0]
+            update.command.value = parts[1]
+        }
+
+        const commandMatch = update.command.name.match(/^([a-zA-Z0-9_-]+)/)
         if (!commandMatch) return undefined
 
         const commandName = commandMatch[1].toLowerCase()
@@ -159,7 +166,7 @@ export class HandlerRegistry {
     }
 
     private getTextHandler(update: BotWebhookUpdate): Function | undefined {
-        if (!update.message.text) return undefined
+        if (!update.message?.text) return undefined
 
         const text = update.message.text
 

@@ -1,7 +1,15 @@
+export const splitFirst = (str: string, delimiter: string): string[] => {
+    const index = str.indexOf(delimiter)
+    if (index === -1) return [str]
+
+    return [str.slice(0, index), str.slice(index + delimiter.length)]
+}
+
 export const stripTags = (str: string, allowed: string[]) => {
     allowed = allowed || []
     const tags = /<\/?([a-z][a-z0-9]*)\b[^>]*\/?>/gi
     const commentsAndPhpTags = /<!--[\s\S]*?-->|<\?(?:php)?[\s\S]*?\?>/gi
+
     return str
         .replaceAll('&nbsp;', ' ')
         .replace(commentsAndPhpTags, '')
