@@ -24,6 +24,9 @@ export class MaxBot extends BaseBot {
         }
 
         const isGroup = typeof chatId === 'string' && chatId.startsWith('-')
+        if (typeof chatId === "string") {
+            chatId = chatId.replace('-', '')
+        }
 
         text = this.prepareMessageText(text, extra.format as string)
 
@@ -85,6 +88,9 @@ export class MaxBot extends BaseBot {
         }
 
         const isGroup = typeof chatId === 'string' && chatId.startsWith('-')
+        if (typeof chatId === "string") {
+            chatId = chatId.replace('-', '')
+        }
 
         caption = this.prepareMessageText(caption || '', extra.format as string)
 
