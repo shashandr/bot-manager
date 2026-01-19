@@ -149,13 +149,13 @@ export abstract class Bot {
         const event = this.events.get(eventName)
 
         if (!event) {
-            throw new Error(`Event handler for '${eventName}' not registered for bot '${this.name}'`)
+            throw new Error(`Event handler for '${eventName}' not registered for bot '${this.serviceName}:${this.name}'`)
         }
 
         try {
             await event.handle(payload)
         } catch (err) {
-            throw new Error(`Handle event '${eventName}' error for bot '${this.name}': ${(err as Error).message}`)
+            throw new Error(`Handle event '${eventName}' error for bot '${this.serviceName}:${this.name}': ${(err as Error).message}`)
         }
     }
 
@@ -184,7 +184,7 @@ export abstract class Bot {
                 }
             }
         } catch (err) {
-            throw new Error(`Handle webhook error for bot '${this.name}': ${(err as Error).message}`)
+            throw new Error(`Handle webhook error for bot '${this.serviceName}:${this.name}': ${(err as Error).message}`)
         }
     }
 
@@ -202,7 +202,7 @@ export abstract class Bot {
         try {
             this.onStart()
         } catch (err) {
-            throw new Error(`Webhook start error for bot '${this.name}': ${(err as Error).message}`)
+            throw new Error(`Webhook start error for bot '${this.serviceName}:${this.name}': ${(err as Error).message}`)
         }
     }
 }
