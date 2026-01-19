@@ -241,7 +241,7 @@ export class MaxBot extends BaseBot {
                 isBot: sender.is_bot,
             },
             chat: {
-                id: data?.message?.recipient.chat_id || data.chat_id,
+                id: `-${data?.message?.recipient.chat_id || data.chat_id}`,
             },
             message: {
                 id: data?.message?.body.mid || 0,
