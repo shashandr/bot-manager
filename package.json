@@ -1,7 +1,7 @@
 {
     "name": "messenger-bot-manager",
     "version": "1.0.0",
-    "description": "TypeScript application for managing Telegram bots with webhook support",
+    "description": "TypeScript application for managing Telegram amd Max bots with webhook support",
     "type": "module",
     "main": "./lib/cjs/index.js",
     "module": "./lib/esm/index.js",
@@ -28,6 +28,7 @@
     },
     "types": "./lib/esm/index.d.ts",
     "keywords": [
+        "messenger",
         "bot",
         "telegram",
         "max"
