@@ -205,13 +205,4 @@ export class TelegramBot extends BaseBot {
 
         return result
     }
-
-    protected toCallbackData(value: unknown, fallback: string): string {
-        let data: string = super.toCallbackData(value, fallback)
-
-        // Telegram limit for callback_data is 1-64 bytes; keep it simple with char limit
-        if (data.length > 64) data = data.slice(0, 64)
-
-        return data
-    }
 }
