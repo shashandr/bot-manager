@@ -85,6 +85,8 @@ export abstract class Bot {
 
     protected abstract onStart(): void
 
+    protected abstract onSubscribe(path: string, secret?: string): void | Promise<void>
+
     protected abstract convertWebhookUpdate(update: any): BotWebhookUpdate
 
     async addMessageTag(chatId: number | string, messageId: number | string, text: string, tag: string, options?: BotMessageOptions): Promise<boolean> {
@@ -192,7 +194,7 @@ export abstract class Bot {
         return getFileType(fileName)
     }
 
-    start(webhook: BotWebhook): void {
+    async start(webhook: BotWebhook, path?: string): Promise<void> {
         this.registerWebhook(webhook)
 
         if (!this.webhook) {
@@ -200,9 +202,21 @@ export abstract class Bot {
         }
 
         try {
-            this.onStart()
+            if (path) {
+                await this.subscribe(path)
+            } else {
+                this.onStart()
+            }
         } catch (err) {
             throw new Error(`Webhook start error for bot '${this.serviceName}:${this.name}': ${(err as Error).message}`)
+        }
+    }
+
+    async subscribe(path: string, secret?: string): Promise<void> {
+        try {
+            await this.onSubscribe(path, secret)
+        } catch (err) {
+            throw new Error(`Subscribe error for bot '${this.serviceName}:${this.name}': ${(err as Error).message}`)
         }
     }
 }

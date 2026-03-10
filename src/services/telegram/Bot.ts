@@ -107,6 +107,13 @@ export class TelegramBot extends BaseBot {
         this.instance.launch()
     }
 
+    protected async onSubscribe(path: string, secret?: string): Promise<void> {
+        await this.instance.telegram.setWebhook(path, {
+            allowed_updates: ['message', 'callback_query'],
+            secret_token: secret,
+        } as any)
+    }
+
     protected convertWebhookUpdate(data: any): BotWebhookUpdate {
         let type: BotWebhookUpdate['type'] = 'text'
         let commandData: any = undefined

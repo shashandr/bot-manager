@@ -45,6 +45,7 @@ export declare abstract class Bot {
     abstract editCaption(chatId: number | string, messageId: number | string, caption: string, options?: BotMessageOptions): Promise<boolean>;
     abstract getUpdate(options?: GetUpdateOptions): Promise<any>;
     protected abstract onStart(): void;
+    protected abstract onSubscribe(path: string): void | Promise<void>;
     protected abstract convertWebhookUpdate(update: any): BotWebhookUpdate;
     addMessageTag(chatId: number | string, messageId: number | string, text: string, tag: string, options?: BotMessageOptions): Promise<boolean>;
     addFileTag(chatId: number | string, messageId: number | string, caption: string, tag: string, options?: BotMessageOptions): Promise<boolean>;
@@ -57,5 +58,6 @@ export declare abstract class Bot {
     registerWebhook(webhook: BotWebhook): this;
     handleWebhook(update: any): Promise<void>;
     getMediaType(fileName: string): string | null;
-    start(webhook: BotWebhook): void;
+    start(webhook: BotWebhook, path?: string): Promise<void>;
+    subscribe(path: string): Promise<void>;
 }

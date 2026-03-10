@@ -9,5 +9,6 @@ export declare class MaxBot extends BaseBot {
     getUpdate(options?: GetUpdateOptions): Promise<any>;
     private prepareKeyboard;
     protected onStart(): void;
+    protected onSubscribe(path: string): Promise<void>;
     protected convertWebhookUpdate(data: any): BotWebhookUpdate;
 }

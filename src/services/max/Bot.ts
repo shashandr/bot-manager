@@ -188,6 +188,14 @@ export class MaxBot extends BaseBot {
         this.instance.start()
     }
 
+    protected async onSubscribe(path: string, secret?: string): Promise<void> {
+        await this.instance.api.raw.post('/subscriptions', {
+            url: path,
+            update_types: ['bot_started', 'message_created', 'message_callback'],
+            secret,
+        })
+    }
+
     protected convertWebhookUpdate(data: any): BotWebhookUpdate {
         let type: BotWebhookUpdate['type'] = 'text'
         let commandData: any = undefined
