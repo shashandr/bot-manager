@@ -188,10 +188,10 @@ export class MaxBot extends BaseBot {
         this.instance.start()
     }
 
-    protected async onSubscribe(path: string, secret?: string): Promise<void> {
+    protected async onSubscribe(url: string, types?: string[], secret?: string): Promise<void> {
         await this.instance.api.raw.post('/subscriptions', {
-            url: path,
-            update_types: ['bot_started', 'message_created', 'message_callback'],
+            url,
+            update_types: types || ['bot_started', 'message_created', 'message_callback'],
             secret,
         })
     }

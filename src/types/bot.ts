@@ -33,6 +33,13 @@ export interface GetUpdateOptions {
     allowedUpdates?: string[]
 }
 
+export interface BotSubscriptionOptions {
+    url: string
+    types?: string[]
+    secret?: string
+}
+
+
 export abstract class Bot {
     protected readonly name: string
     protected readonly serviceName?: string
@@ -85,7 +92,7 @@ export abstract class Bot {
 
     protected abstract onStart(): void
 
-    protected abstract onSubscribe(path: string, secret?: string): void | Promise<void>
+    protected abstract onSubscribe(url: string, types?: string[], secret?: string): void | Promise<void>
 
     protected abstract convertWebhookUpdate(update: any): BotWebhookUpdate
 
@@ -194,7 +201,7 @@ export abstract class Bot {
         return getFileType(fileName)
     }
 
-    async start(webhook: BotWebhook, path?: string): Promise<void> {
+    async start(webhook: BotWebhook, subscriptionOptions?: BotSubscriptionOptions): Promise<void> {
         this.registerWebhook(webhook)
 
         if (!this.webhook) {
@@ -202,21 +209,14 @@ export abstract class Bot {
         }
 
         try {
-            if (path) {
-                await this.subscribe(path)
+            if (subscriptionOptions) {
+                const { url, types, secret } = subscriptionOptions
+                await this.onSubscribe(url, types, secret)
             } else {
                 this.onStart()
             }
         } catch (err) {
             throw new Error(`Webhook start error for bot '${this.serviceName}:${this.name}': ${(err as Error).message}`)
-        }
-    }
-
-    async subscribe(path: string, secret?: string): Promise<void> {
-        try {
-            await this.onSubscribe(path, secret)
-        } catch (err) {
-            throw new Error(`Subscribe error for bot '${this.serviceName}:${this.name}': ${(err as Error).message}`)
         }
     }
 }

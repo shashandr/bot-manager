@@ -107,9 +107,9 @@ export class TelegramBot extends BaseBot {
         this.instance.launch()
     }
 
-    protected async onSubscribe(path: string, secret?: string): Promise<void> {
-        await this.instance.telegram.setWebhook(path, {
-            allowed_updates: ['message', 'callback_query'],
+    protected async onSubscribe(url: string, types?: string[], secret?: string): Promise<void> {
+        await this.instance.telegram.setWebhook(url, {
+            allowed_updates: types || ['message', 'callback_query'],
             secret_token: secret,
         } as any)
     }
