@@ -141,6 +141,10 @@ export class TelegramBot extends BaseBot {
     }
 
     protected convertWebhookUpdate(data: any): BotWebhookUpdate {
+        if (data?.callback_query) {
+            data = data.callback_query
+        }
+
         let type: BotWebhookUpdate['type'] = 'text'
         let commandData: any = undefined
         let callbackData: any = undefined

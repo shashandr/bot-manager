@@ -62,7 +62,7 @@ export declare abstract class Bot {
     registerEvent(event: BotEvent): this;
     handleEvent(eventName: string, payload: unknown): Promise<void>;
     registerWebhook(webhook: BotWebhook): this;
-    handleWebhook(update: any, headers?: Record<string, string | string[] | undefined>): Promise<void>;
+    handleWebhook(body: any, headers?: Record<string, string | string[] | undefined>): Promise<void>;
     getMediaType(fileName: string): string | null;
     start(webhook: BotWebhook, subscriptionOptions?: BotSubscriptionOptions): Promise<void>;
 }

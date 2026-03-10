@@ -180,7 +180,7 @@ export abstract class Bot {
         return this
     }
 
-    async handleWebhook(update: any, headers: Record<string, string | string[] | undefined> = {}): Promise<void> {
+    async handleWebhook(body: any, headers: Record<string, string | string[] | undefined> = {}): Promise<void> {
         if (!this.webhook) {
             return
         }
@@ -190,7 +190,7 @@ export abstract class Bot {
                 throw new Error('Invalid webhook secret')
             }
 
-            const payload = this.convertWebhookUpdate(update)
+            const payload = this.convertWebhookUpdate(body)
             const handler = this.webhook.getHandler(payload)
 
             if (handler) {
