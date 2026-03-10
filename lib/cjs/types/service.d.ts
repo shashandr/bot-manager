@@ -5,7 +5,7 @@ export declare abstract class MessengerService {
     abstract getName(): string;
     abstract createBot(name: string, config: BotConfig, events?: BotEvent[]): Bot;
     registerBot(bot: Bot): this;
-    registerBot(bot: string, token: string, events?: BotEvent[]): this;
+    registerBot(bot: string, config: BotConfig, events?: BotEvent[]): this;
     getBots(): string[];
     getBot(name: string): Bot;
 }

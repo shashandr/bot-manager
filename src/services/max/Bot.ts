@@ -188,12 +188,32 @@ export class MaxBot extends BaseBot {
         this.instance.start()
     }
 
-    protected async onSubscribe(url: string, types?: string[], secret?: string): Promise<void> {
-        await this.instance.api.raw.post('/subscriptions', {
+    protected async onSubscribe(url: string, types?: string[]): Promise<boolean> {
+        const response = await this.instance.api.raw.post('/subscriptions', {
             url,
             update_types: types || ['bot_started', 'message_created', 'message_callback'],
-            secret,
+            ...(this.config.secret ? { secret: this.config.secret } : {}),
         })
+
+        if (response && typeof response.success === 'boolean') {
+            return response.success
+        }
+
+        return true
+    }
+
+    protected verifySecret(headers: Record<string, string | string[] | undefined>): boolean {
+        const expected = this.config.secret
+        if (!expected) {
+            return true
+        }
+
+        const header = headers['x-max-bot-api-secret'] || headers['X-Max-Bot-Api-Secret']
+        if (Array.isArray(header)) {
+            return header.includes(expected)
+        }
+
+        return header === expected
     }
 
     protected convertWebhookUpdate(data: any): BotWebhookUpdate {

@@ -107,11 +107,37 @@ export class TelegramBot extends BaseBot {
         this.instance.launch()
     }
 
-    protected async onSubscribe(url: string, types?: string[], secret?: string): Promise<void> {
-        await this.instance.telegram.setWebhook(url, {
+    protected async onSubscribe(url: string, types?: string[]): Promise<boolean> {
+        const bot = this.instance as Telegraf<Context>
+        const result = await (bot.telegram as any).callApi('setWebhook', {
+            url,
             allowed_updates: types || ['message', 'callback_query'],
-            secret_token: secret,
-        } as any)
+            ...(this.config.secret ? { secret_token: this.config.secret } : {}),
+        })
+
+        if (typeof result === 'boolean') {
+            return result
+        }
+
+        if (result && typeof result.ok === 'boolean') {
+            return result.ok
+        }
+
+        return true
+    }
+
+    protected verifySecret(headers: Record<string, string | string[] | undefined>): boolean {
+        const expected = this.config.secret
+        if (!expected) {
+            return true
+        }
+
+        const header = headers['x-telegram-bot-api-secret-token'] || headers['X-Telegram-Bot-Api-Secret-Token']
+        if (Array.isArray(header)) {
+            return header.includes(expected)
+        }
+
+        return header === expected
     }
 
     protected convertWebhookUpdate(data: any): BotWebhookUpdate {

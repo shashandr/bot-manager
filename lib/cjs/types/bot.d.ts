@@ -3,6 +3,7 @@ import { BotEvent } from './event';
 import { MessengerService } from "~/types/service";
 export interface BotConfig {
     token: string;
+    secret?: string;
 }
 export interface BotMessageButton {
     type: 'callback' | 'link' | 'request_contact' | 'location';
@@ -25,6 +26,10 @@ export interface GetUpdateOptions {
     timeout?: number;
     allowedUpdates?: string[];
 }
+export interface BotSubscriptionOptions {
+    url: string;
+    types?: string[];
+}
 export declare abstract class Bot {
     protected readonly name: string;
     protected readonly serviceName?: string;
@@ -45,7 +50,8 @@ export declare abstract class Bot {
     abstract editCaption(chatId: number | string, messageId: number | string, caption: string, options?: BotMessageOptions): Promise<boolean>;
     abstract getUpdate(options?: GetUpdateOptions): Promise<any>;
     protected abstract onStart(): void;
-    protected abstract onSubscribe(path: string): void | Promise<void>;
+    protected abstract onSubscribe(url: string, types?: string[]): Promise<boolean>;
+    protected verifySecret(headers: Record<string, string | string[] | undefined>): boolean;
     protected abstract convertWebhookUpdate(update: any): BotWebhookUpdate;
     addMessageTag(chatId: number | string, messageId: number | string, text: string, tag: string, options?: BotMessageOptions): Promise<boolean>;
     addFileTag(chatId: number | string, messageId: number | string, caption: string, tag: string, options?: BotMessageOptions): Promise<boolean>;
@@ -56,8 +62,7 @@ export declare abstract class Bot {
     registerEvent(event: BotEvent): this;
     handleEvent(eventName: string, payload: unknown): Promise<void>;
     registerWebhook(webhook: BotWebhook): this;
-    handleWebhook(update: any): Promise<void>;
+    handleWebhook(update: any, headers?: Record<string, string | string[] | undefined>): Promise<void>;
     getMediaType(fileName: string): string | null;
-    start(webhook: BotWebhook, path?: string): Promise<void>;
-    subscribe(path: string): Promise<void>;
+    start(webhook: BotWebhook, subscriptionOptions?: BotSubscriptionOptions): Promise<void>;
 }

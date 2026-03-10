@@ -52,8 +52,13 @@ export class ServiceManager {
         await bot.handleEvent(eventName, payload)
     }
 
-    async handleWebhook(serviceName: string, botName: string, update: any) {
+    async handleWebhook(
+        serviceName: string,
+        botName: string,
+        update: any,
+        headers: Record<string, string | string[] | undefined> = {},
+    ) {
         const bot = this.getService(serviceName).getBot(botName)
-        await bot.handleWebhook(update)
+        await bot.handleWebhook(update, headers)
     }
 }

@@ -9,8 +9,8 @@ export abstract class MessengerService {
     abstract createBot(name: string, config: BotConfig, events?: BotEvent[]): Bot
 
     registerBot(bot: Bot): this;
-    registerBot(bot: string, token: string, events?: BotEvent[]): this;
-    registerBot(bot: string | Bot, token?: string, events?: BotEvent[]): this {
+    registerBot(bot: string, config: BotConfig, events?: BotEvent[]): this;
+    registerBot(bot: string | Bot, config?: BotConfig, events?: BotEvent[]): this {
         let botName: string
         let botObj: Bot
 
@@ -25,10 +25,10 @@ export abstract class MessengerService {
         }
 
         if (typeof bot === 'string') {
-            if (!token) {
-                throw new Error(`Token required`)
+            if (!config) {
+                throw new Error(`Config required`)
             }
-            botObj = this.createBot(botName, { token }, events)
+            botObj = this.createBot(botName, config, events)
         } else {
             botObj = bot
         }

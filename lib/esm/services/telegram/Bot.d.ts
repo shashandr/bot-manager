@@ -9,8 +9,8 @@ export declare class TelegramBot extends BaseBot {
     editCaption(chatId: number | string, messageId: number, caption: string, options?: BotMessageOptions): Promise<boolean>;
     getUpdate(options?: GetUpdateOptions): Promise<any>;
     protected onStart(): void;
-    protected onSubscribe(path: string): Promise<void>;
+    protected onSubscribe(url: string, types?: string[]): Promise<boolean>;
+    protected verifySecret(headers: Record<string, string | string[] | undefined>): boolean;
     protected convertWebhookUpdate(data: any): BotWebhookUpdate;
     private prepareKeyboard;
-    protected toCallbackData(value: unknown, fallback: string): string;
 }

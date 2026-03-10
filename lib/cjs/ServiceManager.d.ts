@@ -7,6 +7,6 @@ export declare class ServiceManager {
     getServices(): ServiceRegistry;
     registerEvent(serviceName: string, botName: string, event: BotEvent): this;
     handleEvent(serviceName: string, botName: string | null, eventName: string, payload: unknown): Promise<void>;
-    handleWebhook(serviceName: string, botName: string, update: any): Promise<void>;
+    handleWebhook(serviceName: string, botName: string, update: any, headers?: Record<string, string | string[] | undefined>): Promise<void>;
 }
 export {};

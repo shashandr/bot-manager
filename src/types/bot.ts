@@ -6,6 +6,7 @@ import { MessengerService } from "~/types/service";
 
 export interface BotConfig {
     token: string
+    secret?: string
 }
 
 export interface BotMessageButton {
@@ -36,7 +37,6 @@ export interface GetUpdateOptions {
 export interface BotSubscriptionOptions {
     url: string
     types?: string[]
-    secret?: string
 }
 
 
@@ -92,7 +92,12 @@ export abstract class Bot {
 
     protected abstract onStart(): void
 
-    protected abstract onSubscribe(url: string, types?: string[], secret?: string): void | Promise<void>
+    protected abstract onSubscribe(url: string, types?: string[]): Promise<boolean>
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    protected verifySecret(headers: Record<string, string | string[] | undefined>): boolean {
+        return true
+    }
 
     protected abstract convertWebhookUpdate(update: any): BotWebhookUpdate
 
@@ -175,12 +180,16 @@ export abstract class Bot {
         return this
     }
 
-    async handleWebhook(update: any): Promise<void> {
+    async handleWebhook(update: any, headers: Record<string, string | string[] | undefined> = {}): Promise<void> {
         if (!this.webhook) {
             return
         }
 
         try {
+            if (!this.verifySecret(headers)) {
+                throw new Error('Invalid webhook secret')
+            }
+
             const payload = this.convertWebhookUpdate(update)
             const handler = this.webhook.getHandler(payload)
 
@@ -210,8 +219,10 @@ export abstract class Bot {
 
         try {
             if (subscriptionOptions) {
-                const { url, types, secret } = subscriptionOptions
-                await this.onSubscribe(url, types, secret)
+                const ok = await this.onSubscribe(subscriptionOptions.url, subscriptionOptions.types)
+                if (!ok) {
+                    throw new Error('Subscription was not confirmed by messenger API')
+                }
             } else {
                 this.onStart()
             }
