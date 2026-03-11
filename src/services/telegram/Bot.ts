@@ -123,7 +123,7 @@ export class TelegramBot extends BaseBot {
             return result.ok
         }
 
-        return true
+        return false
     }
 
     protected verifySecret(headers: Record<string, string | string[] | undefined>): boolean {
