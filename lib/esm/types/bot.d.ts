@@ -4,6 +4,7 @@ import { MessengerService } from "~/types/service";
 export interface BotConfig {
     token: string;
     secret?: string;
+    instance?: any;
 }
 export interface BotMessageButton {
     type: 'callback' | 'link' | 'request_contact' | 'location';
@@ -39,7 +40,7 @@ export declare abstract class Bot {
     protected webhook?: BotWebhook;
     protected defaultParseMode: string;
     constructor(name: string, config: BotConfig, events?: BotEvent[], service?: MessengerService);
-    protected abstract createInstance(token: string): any;
+    protected abstract createInstance(token: string, config?: any): any;
     getName(): string;
     getServiceName(): string | undefined;
     getConfig(): BotConfig;

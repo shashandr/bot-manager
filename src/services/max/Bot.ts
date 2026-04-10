@@ -7,7 +7,7 @@ import { downloadToTemp } from '~/lib/files'
 import * as fs from 'fs'
 
 export class MaxBot extends BaseBot {
-    protected createInstance(token: string): MaxBotApi {
+    protected createInstance(token: string, config?: any): MaxBotApi {
         return new MaxBotApi(token)
     }
 

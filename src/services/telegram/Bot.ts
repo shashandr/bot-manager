@@ -9,8 +9,8 @@ import {
 } from "~/types"
 
 export class TelegramBot extends BaseBot {
-    protected createInstance(token: string): Telegraf<Context> {
-        return new Telegraf(token)
+    protected createInstance(token: string, config?: any): Telegraf<Context> {
+        return new Telegraf(token, config)
     }
 
     async sendMessage(chatId: number | string, text: string, options?: BotMessageOptions): Promise<boolean> {

@@ -7,6 +7,7 @@ import { MessengerService } from "~/types/service";
 export interface BotConfig {
     token: string
     secret?: string
+    instance?: any
 }
 
 export interface BotMessageButton {
@@ -55,14 +56,14 @@ export abstract class Bot {
             this.serviceName = service.getName()
         }
         this.config = config
-        this.instance = this.createInstance(config.token)
+        this.instance = this.createInstance(config.token, config?.instance)
 
         events.forEach((event: BotEvent) => {
             this.registerEvent(event)
         })
     }
 
-    protected abstract createInstance(token: string): any
+    protected abstract createInstance(token: string, config?: any): any
 
     getName() {
         return this.name
