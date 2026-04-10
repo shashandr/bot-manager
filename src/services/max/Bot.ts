@@ -187,10 +187,18 @@ export class MaxBot extends BaseBot {
             await this.handleWebhook(ctx.update)
         })
         this.instance.on('message_created', async (ctx: any) => {
-            await this.handleWebhook(ctx.update)
+            try {
+                await this.handleWebhook(ctx.update)
+            } catch (err) {
+                console.error('Callback handler error:', err)
+            }
         })
         this.instance.on('message_callback', async (ctx: any) => {
-            await this.handleWebhook(ctx.update)
+            try {
+                await this.handleWebhook(ctx.update)
+            } catch (err) {
+                console.error('Callback handler error:', err)
+            }
         })
         this.instance.start()
     }
