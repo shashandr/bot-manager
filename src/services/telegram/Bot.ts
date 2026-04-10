@@ -112,18 +112,10 @@ export class TelegramBot extends BaseBot {
             console.error('Telegraf error:', err)
         })
         this.instance.on('message', async (ctx: any) => {
-            try {
-                await this.handleWebhook(ctx.update)
-            } catch (err) {
-                console.error('Message handler error:', err)
-            }
+            await this.handleWebhook(ctx.update)
         })
         this.instance.on('callback_query', async (ctx: any) => {
-            try {
-                await this.handleWebhook(ctx.callbackQuery)
-            } catch (err) {
-                console.error('Callback handler error:', err)
-            }
+            await this.handleWebhook(ctx.callbackQuery)
         })
         this.instance.launch()
     }
