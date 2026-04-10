@@ -55,6 +55,7 @@ export abstract class Bot {
     protected events: Map<string, BotEvent> = new Map()
     protected webhook?: BotWebhook
     protected defaultParseMode = 'html'
+    protected pollingMode = false
 
     constructor(name: string, config: BotConfig, events: BotEvent[] = [], service?: MessengerService) {
         this.name = name
@@ -209,7 +210,12 @@ export abstract class Bot {
                 }
             }
         } catch (err) {
-            throw new Error(`Handle webhook error for bot '${this.serviceName}:${this.name}': ${(err as Error).message}`)
+            const errorMsg = `Handle webhook error for bot '${this.serviceName}:${this.name}': ${(err as Error).message}`
+            if (this.pollingMode) {
+                console.error(errorMsg)
+            } else {
+                throw new Error(errorMsg)
+            }
         }
     }
 
@@ -231,6 +237,7 @@ export abstract class Bot {
                     throw new Error('Subscription was not confirmed by messenger API')
                 }
             } else {
+                this.pollingMode = true
                 this.onStart()
             }
         } catch (err) {
