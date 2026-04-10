@@ -1,5 +1,12 @@
 import { Bot as MaxBotApi, Keyboard } from '@maxhub/max-bot-api'
-import { Bot as BaseBot, BotMessageOptions, GetUpdateOptions, BotWebhookUpdate, BotMessageButton } from '~/types'
+import {
+    Bot as BaseBot,
+    BotMessageOptions,
+    GetUpdateOptions,
+    BotWebhookUpdate,
+    BotMessageButton,
+    BotInstanceConfig
+} from '~/types'
 import { ActionResponse, Message } from '@maxhub/max-bot-api/dist/core/network/api'
 import { MediaAttachment } from '@maxhub/max-bot-api/dist/core/helpers/attachments'
 import { splitFirst, vcfExtractPhone } from '~/lib/strings'
@@ -7,7 +14,7 @@ import { downloadToTemp } from '~/lib/files'
 import * as fs from 'fs'
 
 export class MaxBot extends BaseBot {
-    protected createInstance(token: string, config?: any): MaxBotApi {
+    protected createInstance(token: string, config?: BotInstanceConfig): MaxBotApi {
         return new MaxBotApi(token)
     }
 

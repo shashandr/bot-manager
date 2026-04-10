@@ -5,12 +5,22 @@ import {
     BotMessageButton,
     BotMessageOptions,
     GetUpdateOptions,
-    BotWebhookUpdate,
+    BotWebhookUpdate, BotInstanceConfig,
 } from "~/types"
 
 export class TelegramBot extends BaseBot {
-    protected createInstance(token: string, config?: any): Telegraf<Context> {
-        return new Telegraf(token, config)
+    protected createInstance(token: string, config?: BotInstanceConfig): Telegraf<Context> {
+        let instanceConfig
+
+        if (config?.proxy) {
+            instanceConfig = {
+                telegram: {
+                    apiRoot: config.proxy.url,
+                },
+            }
+        }
+
+        return new Telegraf(token, instanceConfig)
     }
 
     async sendMessage(chatId: number | string, text: string, options?: BotMessageOptions): Promise<boolean> {

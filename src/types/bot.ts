@@ -4,10 +4,16 @@ import { pregMatchAll, stripTags } from '~/lib/strings'
 import { getFileType } from '~/lib/files'
 import { MessengerService } from "~/types/service";
 
+export interface BotInstanceConfig {
+    proxy?: {
+        url: string
+    }
+}
+
 export interface BotConfig {
     token: string
     secret?: string
-    instance?: any
+    instance?: BotInstanceConfig
 }
 
 export interface BotMessageButton {
@@ -63,7 +69,7 @@ export abstract class Bot {
         })
     }
 
-    protected abstract createInstance(token: string, config?: any): any
+    protected abstract createInstance(token: string, config?: BotInstanceConfig): any
 
     getName() {
         return this.name
