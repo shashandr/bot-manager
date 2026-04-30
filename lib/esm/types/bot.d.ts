@@ -44,6 +44,7 @@ export declare abstract class Bot {
     protected events: Map<string, BotEvent>;
     protected webhook?: BotWebhook;
     protected defaultParseMode: string;
+    protected pollingMode: boolean;
     constructor(name: string, config: BotConfig, events?: BotEvent[], service?: MessengerService);
     protected abstract createInstance(token: string, config?: BotInstanceConfig): any;
     getName(): string;
