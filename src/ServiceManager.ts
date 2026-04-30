@@ -44,7 +44,7 @@ export class ServiceManager {
         }
 
         if (!botName) {
-            throw new Error(`Event ${botName}:${eventName} not found`)
+            throw new Error(`Event ${eventName} not found for service ${serviceName}`)
         }
 
         const bot = service.getBot(botName)
